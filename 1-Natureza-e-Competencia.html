@@ -118,9 +118,11 @@
             color: #5c1a1a;
         }
         .navigation {
-            text-align: right;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
         }
-        #next-btn, #restart-btn {
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -130,6 +132,20 @@
             cursor: pointer;
             display: none;
         }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
         #results-container {
             text-align: center;
         }
@@ -151,7 +167,7 @@
         </div>
 
         <div id="quiz-body">
-            <p><span id="question-number"></span> de 120</p>
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
             <div id="question-text"></div>
             <div class="answer-options">
                 <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
@@ -159,7 +175,8 @@
             </div>
             <div id="feedback"></div>
             <div class="navigation">
-                <button id="next-btn" onclick="nextQuestion()">Próxima Questão</button>
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
             </div>
         </div>
 
@@ -167,7 +184,8 @@
             <h2>Caderno Concluído!</h2>
             <p id="score"></p>
             <p id="score-message"></p>
-            <button id="restart-btn" onclick="restartQuiz()">Refazer Questões</button>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
         </div>
 
     </div>
@@ -175,614 +193,558 @@
     <script>
         const quizData = [
             {
-                question: "Ao Tribunal de Contas da União, órgão de controle externo, compete, nos termos da Constituição Federal e na forma da legislação vigente, em especial da Lei nº 8.443, de 16 de julho de 1992, exercer suas atribuições.",
+                question: "Ao Tribunal de Contas da União, órgão de controle externo, compete atuar nos termos da Constituição Federal e na forma da legislação vigente, em especial da Lei nº 8.443, de 16 de julho de 1992.",
                 answer: "Certo",
-                rationale: "A assertiva corresponde exatamente ao conteúdo do caput do Art. 1º, que estabelece a natureza e o fundamento normativo da competência do TCU."
+                rationale: "A assertiva está correta, pois reproduz fielmente a competência e o embasamento normativo do Tribunal de Contas da União, conforme descrito no caput do Art. 1º do dispositivo legal fornecido.<br><br><strong>Dispositivo Legal:</strong><br>Art. 1º Ao Tribunal de Contas da União, órgão de controle externo, compete, nos termos da Constituição Federal e na forma da legislação vigente, em especial da Lei nº 8.443, de 16 de julho de 1992:"
             },
             {
-                question: "O Tribunal de Contas da União é um órgão de controle interno, subordinado ao Poder Executivo.",
+                question: "Ao Tribunal de Contas da União, órgão de controle interno, compete atuar nos termos da Constituição Federal e na forma da legislação vigente.",
                 answer: "Errado",
-                rationale: "Conforme o caput do Art. 1º, o TCU é um órgão de controle externo e não possui subordinação a nenhum dos Poderes."
+                rationale: "A assertiva está incorreta. O erro reside na classificação do TCU como órgão de \"controle interno\", quando, na verdade, ele é expressamente definido pela norma como órgão de \"controle externo\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 1º Ao Tribunal de Contas da União, órgão de controle externo, compete, nos termos da Constituição Federal e na forma da legislação vigente, em especial da Lei nº 8.443, de 16 de julho de 1992:"
             },
             {
                 question: "Compete ao TCU julgar as contas de qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos ou pelos quais a União responda.",
                 answer: "Certo",
-                rationale: "A questão reproduz fielmente a primeira parte do inciso I do Art. 1º."
+                rationale: "A assertiva está correta, correspondendo exatamente a uma das competências de julgamento do TCU, que abrange um vasto rol de responsáveis por recursos públicos, conforme o início do inciso I.<br><br><strong>Dispositivo Legal:</strong><br>I – julgar as contas de qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos ou pelos quais a União responda ou que, em nome desta, assuma obrigações de natureza pecuniária, bem como daqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário;"
             },
             {
-                question: "A competência do TCU para julgar contas não abrange aqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário.",
+                question: "Compete ao TCU julgar as contas de qualquer pessoa jurídica de direito público, excluídas as pessoas físicas e as entidades privadas, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos.",
                 answer: "Errado",
-                rationale: "O final do inciso I do Art. 1º inclui expressamente na competência de julgamento do TCU \"aqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário\"."
+                rationale: "A assertiva está incorreta. O erro está em restringir a competência do TCU a \"qualquer pessoa jurídica de direito público\", excluindo pessoas físicas e entidades privadas. A lei é clara ao afirmar que a competência abrange \"qualquer pessoa física ou jurídica, pública ou privada\".<br><br><strong>Dispositivo Legal:</strong><br>I – julgar as contas de qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos..."
             },
             {
-                question: "O TCU só pode julgar contas de pessoas jurídicas de direito público, excluindo pessoas físicas e entidades privadas.",
-                answer: "Errado",
-                rationale: "O inciso I do Art. 1º é claro ao afirmar que a competência de julgamento abrange \"qualquer pessoa física ou jurídica, pública ou privada\"."
-            },
-            {
-                question: "O TCU pode realizar, por iniciativa própria, auditorias de natureza contábil, financeira, orçamentária, operacional ou patrimonial nas unidades administrativas dos Poderes.",
+                question: "Compete ao TCU julgar as contas de quem administra bens públicos, bem como daqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário.",
                 answer: "Certo",
-                rationale: "A assertiva está em conformidade com o inciso II do Art. 1º, que prevê a realização de fiscalizações por iniciativa própria do Tribunal."
+                rationale: "A assertiva está correta, pois contempla corretamente a parte final do inciso I, que estende a competência de julgamento do Tribunal àqueles que, por seus atos, causem prejuízo ao patrimônio público.<br><br><strong>Dispositivo Legal:</strong><br>I – julgar as contas de qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos [...], bem como daqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário;"
             },
             {
-                question: "A realização de auditorias e inspeções pelo TCU depende exclusivamente de solicitação do Congresso Nacional, de suas casas ou das respectivas comissões.",
-                answer: "Errado",
-                rationale: "O inciso II do Art. 1º estabelece que as fiscalizações podem ocorrer \"por iniciativa própria ou por solicitação do Congresso Nacional\", não sendo a solicitação a única via."
-            },
-            {
-                question: "O TCU deve prestar as informações solicitadas pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões, sobre a fiscalização contábil, financeira, orçamentária, operacional e patrimonial.",
+                question: "Compete ao TCU realizar, por iniciativa própria ou por solicitação do Congresso Nacional, de suas casas ou das respectivas comissões, auditorias e inspeções de natureza contábil, financeira, orçamentária, operacional ou patrimonial.",
                 answer: "Certo",
-                rationale: "A questão reflete com precisão o conteúdo do inciso III do Art. 1º."
+                rationale: "A assertiva está correta, descrevendo de forma precisa a competência do TCU para realizar fiscalizações, seja por iniciativa própria ou por provocação do Poder Legislativo, conforme o inciso II.<br><br><strong>Dispositivo Legal:</strong><br>II – realizar, por iniciativa própria ou por solicitação do Congresso Nacional, de suas casas ou das respectivas comissões, auditorias, inspeções ou acompanhamentos de natureza contábil, financeira, orçamentária, operacional ou patrimonial nas unidades administrativas dos Poderes Legislativo, Executivo e Judiciário e demais órgãos e entidades sujeitos à sua jurisdição;"
             },
             {
-                question: "O TCU tem a faculdade, mas não o dever, de prestar as informações solicitadas pelo Congresso Nacional sobre os resultados de auditorias e inspeções realizadas.",
+                question: "Compete ao TCU realizar, somente por solicitação do Congresso Nacional, de suas casas ou das respectivas comissões, auditorias e inspeções nas unidades administrativas dos Poderes.",
                 answer: "Errado",
-                rationale: "O inciso III do Art. 1º utiliza o verbo \"prestar\", indicando um dever, e não uma faculdade, de fornecer as informações solicitadas pelo Poder Legislativo."
+                rationale: "A assertiva está incorreta. O erro está no uso do termo \"somente\", que restringe a atuação do TCU. A lei estabelece que o Tribunal pode agir tanto \"por iniciativa própria\" quanto por solicitação, não dependendo exclusivamente de provocação externa.<br><br><strong>Dispositivo Legal:</strong><br>II – realizar, por iniciativa própria ou por solicitação do Congresso Nacional, de suas casas ou das respectivas comissões, auditorias, inspeções ou acompanhamentos..."
+            },
+            {
+                question: "Compete ao TCU realizar auditorias e inspeções de natureza contábil e financeira apenas nas unidades administrativas dos Poderes Executivo e Judiciário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta, pois limita o escopo de atuação do TCU. A norma prevê que as fiscalizações podem ocorrer nas unidades administrativas dos três Poderes: \"Legislativo, Executivo e Judiciário\".<br><br><strong>Dispositivo Legal:</strong><br>II – realizar [...] auditorias, inspeções ou acompanhamentos de natureza contábil, financeira, orçamentária, operacional ou patrimonial nas unidades administrativas dos Poderes Legislativo, Executivo e Judiciário e demais órgãos e entidades sujeitos à sua jurisdição;"
+            },
+            {
+                question: "É de competência do TCU prestar as informações solicitadas pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões, sobre a fiscalização contábil, financeira, orçamentária, operacional e patrimonial.",
+                answer: "Certo",
+                rationale: "A assertiva está correta. Ela reflete com exatidão a obrigação do Tribunal de Contas da União de fornecer informações ao Poder Legislativo sobre suas atividades de fiscalização e os resultados obtidos, conforme o inciso III.<br><br><strong>Dispositivo Legal:</strong><br>III – prestar as informações solicitadas pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões, sobre a fiscalização contábil, financeira, orçamentária, operacional e patrimonial e sobre resultados de auditorias e inspeções realizadas;"
+            },
+            {
+                question: "É facultado ao TCU prestar as informações solicitadas pelo Congresso Nacional sobre os resultados de auditorias e inspeções realizadas.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em tratar a prestação de informações como uma faculdade (\"facultado\"). O texto legal utiliza o verbo \"prestar\" no contexto de uma competência-dever, indicando uma obrigação, e não uma opção, do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>III – prestar as informações solicitadas pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões, sobre a fiscalização contábil, financeira, orçamentária, operacional e patrimonial e sobre resultados de auditorias e inspeções realizadas;"
             },
             {
                 question: "Compete ao TCU emitir pronunciamento conclusivo sobre matéria que seja submetida a sua apreciação pela comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal.",
                 answer: "Certo",
-                rationale: "A assertiva está de acordo com o disposto no inciso IV do Art. 1º."
+                rationale: "A assertiva está correta e descreve literalmente a competência do TCU para emitir um parecer final sobre matérias específicas encaminhadas pela comissão mista de orçamento, conforme previsto no inciso IV.<br><br><strong>Dispositivo Legal:</strong><br>IV – emitir pronunciamento conclusivo sobre matéria que seja submetida a sua apreciação pela comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal, nos termos do § 1º do art. 72 da Constituição Federal;"
             },
             {
-                question: "Qualquer comissão do Congresso Nacional, seja ela permanente ou temporária, pode submeter matéria ao TCU para a emissão de pronunciamento conclusivo.",
+                question: "Compete ao TCU emitir pronunciamento opinativo sobre matéria que seja submetida a sua apreciação por qualquer comissão do Congresso Nacional.",
                 answer: "Errado",
-                rationale: "O inciso IV do Art. 1º especifica que a competência para emitir pronunciamento conclusivo se refere a matérias submetidas pela \"comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal\"."
+                rationale: "A assertiva está incorreta por dois motivos. Primeiro, o pronunciamento é definido como \"conclusivo\", e não meramente \"opinativo\". Segundo, a matéria deve ser submetida pela \"comissão mista permanente de senadores e deputados\" específica, e não por \"qualquer comissão\".<br><br><strong>Dispositivo Legal:</strong><br>IV – emitir pronunciamento conclusivo sobre matéria que seja submetida a sua apreciação pela comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal..."
             },
             {
                 question: "Compete ao TCU auditar, por solicitação da comissão mista permanente de senadores e deputados ou de comissão técnica de qualquer das casas do Congresso Nacional, projetos e programas autorizados na lei orçamentária anual.",
                 answer: "Certo",
-                rationale: "A questão reproduz corretamente o conteúdo do inciso V do Art. 1º."
+                rationale: "A assertiva está correta, detalhando adequadamente quem pode solicitar auditorias de projetos e programas (a comissão mista ou comissões técnicas) e qual o objeto da auditoria (aqueles autorizados na lei orçamentária), nos termos do inciso V.<br><br><strong>Dispositivo Legal:</strong><br>V – auditar, por solicitação da comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal, ou de comissão técnica de qualquer das casas do Congresso Nacional, projetos e programas autorizados na lei orçamentária anual, avaliando os seus resultados quanto à eficácia, eficiência, efetividade e economicidade;"
             },
             {
-                question: "Ao auditar projetos e programas, o TCU deve avaliar seus resultados apenas quanto à eficácia e eficiência.",
+                question: "Compete ao TCU auditar, por iniciativa própria, projetos e programas autorizados na lei orçamentária anual, avaliando os seus resultados.",
                 answer: "Errado",
-                rationale: "O inciso V do Art. 1º determina que a avaliação dos resultados deve considerar a \"eficácia, eficiência, efetividade e economicidade\"."
+                rationale: "A assertiva está incorreta. Para a auditoria específica de projetos e programas prevista neste inciso, a atuação do TCU não se dá \"por iniciativa própria\", mas sim \"por solicitação\" da comissão mista permanente ou de comissão técnica do Congresso.<br><br><strong>Dispositivo Legal:</strong><br>V – auditar, por solicitação da comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal, ou de comissão técnica de qualquer das casas do Congresso Nacional, projetos e programas autorizados na lei orçamentária anual..."
             },
             {
-                question: "A auditoria de projetos e programas autorizados na lei orçamentária anual pode ser realizada por iniciativa do próprio TCU.",
-                answer: "Errado",
-                rationale: "De acordo com o inciso V do Art. 1º, essa auditoria específica depende de \"solicitação da comissão mista permanente de senadores e deputados (...) ou de comissão técnica de qualquer das casas do Congresso Nacional\"."
-            },
-            {
-                question: "É competência do TCU apreciar as contas prestadas anualmente pelo Presidente da República.",
+                question: "Ao auditar projetos e programas, compete ao TCU avaliar os seus resultados quanto à eficácia, eficiência, efetividade e economicidade.",
                 answer: "Certo",
-                rationale: "A assertiva corresponde literally ao inciso VI do Art. 1º."
+                rationale: "A assertiva está correta, pois especifica com precisão os critérios que devem ser utilizados pelo TCU ao avaliar os resultados dos projetos e programas auditados, conforme a parte final do inciso V.<br><br><strong>Dispositivo Legal:</strong><br>V – auditar, [...], projetos e programas autorizados na lei orçamentária anual, avaliando os seus resultados quanto à eficácia, eficiência, efetividade e economicidade;"
             },
             {
-                question: "O TCU julga, em caráter definitivo, as contas prestadas anualmente pelo Presidente da República.",
-                answer: "Errado",
-                rationale: "O inciso VI do Art. 1º estabelece que o TCU deve \"apreciar\" as contas, emitindo um parecer prévio que subsidiará o julgamento político a ser realizado pelo Congresso Nacional, conforme a Constituição Federal."
-            },
-            {
-                question: "O TCU deve acompanhar a arrecadação da receita a cargo da União e das entidades da administração indireta, mediante fiscalizações ou por meio de demonstrativos próprios.",
+                question: "Compete ao Tribunal de Contas da União apreciar as contas prestadas anualmente pelo Presidente da República.",
                 answer: "Certo",
-                rationale: "A questão está em conformidade com o inciso VII do Art. 1º."
+                rationale: "A assertiva está correta, pois reproduz literally a competência do TCU descrita no inciso VI do Art. 1º.<br><br><strong>Dispositivo Legal:</strong><br>VI – apreciar as contas prestadas anualmente pelo Presidente da República;"
             },
             {
-                question: "O acompanhamento da arrecadação da receita pelo TCU exclui as fundações e sociedades instituídas e mantidas pelo poder público federal.",
+                question: "Compete ao Tribunal de Contas da União julgar as contas prestadas anualmente pelo Presidente da República.",
                 answer: "Errado",
-                rationale: "O inciso VII do Art. 1º inclui expressamente \"as fundações e sociedades instituídas e mantidas pelo poder público federal\" no escopo de seu acompanhamento."
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. Para as contas do Presidente da República, a competência do TCU é de \"apreciar\" para emitir um parecer prévio, e não de \"julgar\", competência esta que cabe ao Congresso Nacional.<br><br><strong>Dispositivo Legal:</strong><br>VI – apreciar as contas prestadas anualmente pelo Presidente da República;"
+            },
+            {
+                question: "Compete ao TCU acompanhar a arrecadação da receita a cargo da União, das entidades da administração indireta, incluídas as fundações e sociedades instituídas e mantidas pelo poder público federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do TCU para acompanhar a arrecadação da receita da União e de suas entidades, conforme o inciso VII.<br><br><strong>Dispositivo Legal:</strong><br>VII – acompanhar a arrecadação da receita a cargo da União, das entidades da administração indireta, incluídas as fundações e sociedades instituídas e mantidas pelo poder público federal, e das demais instituições sob sua jurisdição, mediante fiscalizações, ou por meio de demonstrativos próprios;"
+            },
+            {
+                question: "Compete ao TCU acompanhar a arrecadação da receita a cargo da União e das entidades da administração indireta, excluídas as fundações e sociedades instituídas e mantidas pelo poder público federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro crucial é a palavra \"excluídas\". O texto legal afirma expressamente que as fundações e sociedades instituídas e mantidas pelo poder público federal estão \"incluídas\" no escopo de acompanhamento.<br><br><strong>Dispositivo Legal:</strong><br>VII – acompanhar a arrecadação da receita a cargo da União, das entidades da administração indireta, incluídas as fundações e sociedades instituídas e mantidas pelo poder público federal..."
             },
             {
                 question: "Compete ao TCU apreciar, para fins de registro, a legalidade dos atos de admissão de pessoal, a qualquer título, na administração direta e indireta, incluídas as fundações instituídas e mantidas pelo poder público federal.",
                 answer: "Certo",
-                rationale: "A assertiva está de acordo com a parte inicial do inciso VIII do Art. 1º."
+                rationale: "A assertiva está correta, correspondendo exatamente à primeira parte da competência estabelecida no inciso VIII, que trata da apreciação dos atos de admissão de pessoal.<br><br><strong>Dispositivo Legal:</strong><br>VIII – apreciar, para fins de registro, a legalidade dos atos de admissão de pessoal, a qualquer título, na administração direta e indireta, incluídas as fundações instituídas e mantidas pelo poder público federal..."
             },
             {
-                question: "A apreciação da legalidade dos atos de admissão de pessoal pelo TCU inclui as nomeações para cargo de provimento em comissão.",
+                question: "Compete ao TCU apreciar, para fins de registro, a legalidade dos atos de admissão de pessoal, a qualquer título, na administração direta e indireta, inclusive as nomeações para cargo de provimento em comissão.",
                 answer: "Errado",
-                rationale: "O inciso VIII do Art. 1º excetua expressamente \"as nomeações para cargo de provimento em comissão\" da necessidade de apreciação para fins de registro."
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a apreciação inclui os cargos em comissão. A lei é clara ao estabelecer que são \"excetuadas as nomeações para cargo de provimento em comissão\".<br><br><strong>Dispositivo Legal:</strong><br>VIII – apreciar, para fins de registro, a legalidade dos atos de admissão de pessoal, a qualquer título, na administração direta e indireta, incluídas as fundações instituídas e mantidas pelo poder público federal, excetuadas as nomeações para cargo de provimento em comissão..."
             },
             {
                 question: "Compete ao TCU apreciar, para fins de registro, a legalidade das concessões de aposentadorias, reformas e pensões a servidores públicos civis e militares federais ou a seus beneficiários.",
                 answer: "Certo",
-                rationale: "A questão corresponde à segunda parte do inciso VIII do Art. 1º."
+                rationale: "A assertiva está correta, pois transcreve com precisão a competência do Tribunal para analisar a legalidade dos atos de concessão de aposentadorias, reformas e pensões, conforme a segunda parte do inciso VIII.<br><br><strong>Dispositivo Legal:</strong><br>VIII – apreciar, para fins de registro, a legalidade [...] das concessões de aposentadorias, reformas e pensões a servidores públicos civis e militares federais ou a seus beneficiários, ressalvadas as melhorias posteriores que não alterem o fundamento legal do ato concessório;"
             },
             {
-                question: "A apreciação do TCU sobre aposentadorias, reformas e pensões abrange as melhorias posteriores que não alterem o fundamento legal do ato concessório.",
+                question: "A competência do TCU para apreciar as concessões de aposentadorias, reformas e pensões abrange as melhorias posteriores, mesmo que não alterem o fundamento legal do ato concessório.",
                 answer: "Errado",
-                rationale: "O inciso VIII do Art. 1º ressalva, ou seja, exclui de sua apreciação, \"as melhorias posteriores que não alterem o fundamento legal do ato concessório\"."
+                rationale: "A assertiva está incorreta. O texto legal expressamente \"ressalva\" (ou seja, exclui) da apreciação para fins de registro \"as melhorias posteriores que não alterem o fundamento legal do ato concessório\".<br><br><strong>Dispositivo Legal:</strong><br>VIII – [...] ressalvadas as melhorias posteriores que não alterem o fundamento legal do ato concessório;"
             },
             {
-                question: "O TCU deve efetuar, observada a legislação pertinente, o cálculo das quotas referentes aos fundos de participação a que alude o parágrafo único do art. 161 da Constituição Federal.",
+                question: "Compete ao TCU efetuar, observada a legislação pertinente, o cálculo das quotas referentes aos fundos de participação a que alude o parágrafo único do art. 161 da Constituição Federal.",
                 answer: "Certo",
-                rationale: "A assertiva reproduz fielmente o conteúdo do inciso IX do Art. 1º."
+                rationale: "A assertiva está correta, descrevendo literalmente a competência do Tribunal para calcular as quotas dos fundos de participação, conforme estipulado no inciso IX.<br><br><strong>Dispositivo Legal:</strong><br>IX – efetuar, observada a legislação pertinente, o cálculo das quotas referentes aos fundos de participação a que alude o parágrafo único do art. 161 da Constituição Federal, fiscalizando a entrega dos respectivos recursos;"
             },
             {
-                question: "A atribuição de fiscalizar a entrega dos recursos dos fundos de participação aos seus destinatários não é da competência do TCU.",
+                question: "É competência do TCU efetuar o cálculo das quotas referentes aos fundos de participação, sendo-lhe vedado fiscalizar a entrega dos respectivos recursos.",
                 answer: "Errado",
-                rationale: "O final do inciso IX do Art. 1º estabelece expressamente a competência para \"fiscalizando a entrega dos respectivos recursos\"."
+                rationale: "A assertiva está incorreta. Além de efetuar o cálculo das quotas, a competência do TCU, segundo a parte final do inciso IX, inclui expressamente a atribuição de \"fiscalizando a entrega dos respectivos recursos\".<br><br><strong>Dispositivo Legal:</strong><br>IX – efetuar, observada a legislação pertinente, o cálculo das quotas referentes aos fundos de participação a que alude o parágrafo único do art. 161 da Constituição Federal, fiscalizando a entrega dos respectivos recursos;"
             },
             {
-                question: "Compete ao TCU efetuar o cálculo das quotas dos recursos do IPI destinadas aos estados e ao Distrito Federal, proporcionalmente ao valor de suas exportações de produtos industrializados.",
-                answer: "Certo",
-                rationale: "A questão corresponde ao disposto no inciso XI do Art. 1º."
-            },
-            {
-                question: "O cálculo das quotas dos recursos do IPI destinadas aos estados é feito com base na população de cada estado, e não no valor das exportações.",
+                question: "O cálculo das quotas referentes aos fundos de participação deve ser efetuado pelo TCU, independentemente da observância da legislação pertinente.",
                 answer: "Errado",
-                rationale: "O inciso XI do Art. 1º determina que o cálculo deve ser \"proporcionalmente ao valor das respectivas exportações de produtos industrializados\"."
+                rationale: "A assertiva está incorreta, pois contradiz o texto legal. O inciso IX condiciona expressamente a atuação do TCU à \"observada a legislação pertinente\".<br><br><strong>Dispositivo Legal:</strong><br>IX – efetuar, observada a legislação pertinente, o cálculo das quotas referentes aos fundos de participação a que alude o parágrafo único do art. 161 da Constituição Federal, fiscalizando a entrega dos respectivos recursos;"
             },
             {
-                question: "O TCU deve emitir parecer prévio sobre as contas do governo de território federal no prazo de sessenta dias, a contar de seu recebimento.",
+                question: "Compete ao TCU efetuar o cálculo das quotas dos recursos provenientes do produto da arrecadação do Imposto sobre Produtos Industrializados destinadas aos estados e ao Distrito Federal, proporcionalmente ao valor das respectivas exportações de produtos industrializados.",
                 answer: "Certo",
-                rationale: "A assertiva está em total conformidade com o inciso XII do Art. 1º."
+                rationale: "A assertiva está correta e transcreve com exatidão a competência do TCU para calcular as quotas do IPI destinadas aos entes federativos mencionados, conforme o inciso XI.<br><br><strong>Dispositivo Legal:</strong><br>XI – efetuar, observada a legislação pertinente, o cálculo das quotas dos recursos provenientes do produto da arrecadação do Imposto sobre Produtos Industrializados destinadas aos estados e ao Distrito Federal, proporcionalmente ao valor das respectivas exportações de produtos industrializados, de que tratam o inciso II do art. 159 e o parágrafo único do art. 161 da Constituição Federal;"
             },
             {
-                question: "O prazo para o TCU emitir parecer prévio sobre as contas de governo de território federal é de noventa dias.",
+                question: "Compete ao TCU efetuar, observada a legislação pertinente, o cálculo das quotas dos recursos provenientes do produto da arrecadação do Imposto de Renda destinadas aos estados e ao Distrito Federal.",
                 answer: "Errado",
-                rationale: "O inciso XII do Art. 1º fixa o prazo em \"sessenta dias\"."
+                rationale: "A assertiva está incorreta. O erro está no tipo de tributo. O inciso XI especifica que o cálculo se refere aos recursos provenientes do \"Imposto sobre Produtos Industrializados\" (IPI), e não do \"Imposto de Renda\".<br><br><strong>Dispositivo Legal:</strong><br>XI – efetuar, observada a legislação pertinente, o cálculo das quotas dos recursos provenientes do produto da arrecadação do Imposto sobre Produtos Industrializados destinadas aos estados e ao Distrito Federal..."
             },
             {
-                question: "É competência do TCU fiscalizar o cumprimento das normas da Lei de Responsabilidade Fiscal por parte dos órgãos e entidades da União.",
-                answer: "Certo",
-                rationale: "A questão reflete com precisão o conteúdo do inciso XIII do Art. 1º."
-            },
-            {
-                question: "A fiscalização do cumprimento da Lei de Responsabilidade Fiscal pelo TCU se restringe aos órgãos do Poder Executivo.",
+                question: "As quotas dos recursos provenientes da arrecadação do IPI, cujo cálculo compete ao TCU, são destinadas aos Municípios, proporcionalmente ao valor das respectivas exportações.",
                 answer: "Errado",
-                rationale: "O inciso XIII do Art. 1º menciona \"órgãos e entidades da União\", abrangendo todos os Poderes e esferas da administração federal."
+                rationale: "A assertiva está incorreta quanto aos destinatários dos recursos. O inciso XI determina que as quotas são destinadas \"aos estados e ao Distrito Federal\", e não aos Municípios.<br><br><strong>Dispositivo Legal:</strong><br>XI – efetuar, observada a legislação pertinente, o cálculo das quotas dos recursos provenientes do produto da arrecadação do Imposto sobre Produtos Industrializados destinadas aos estados e ao Distrito Federal..."
             },
             {
-                question: "Compete ao TCU processar e julgar as infrações administrativas contra as finanças públicas e a responsabilidade fiscal tipificadas na legislação vigente.",
+                question: "Compete ao TCU efetuar o cálculo das quotas dos recursos provenientes do IPI, de que trata o inciso II do art. 159 da Constituição Federal, destinadas aos estados e ao Distrito Federal.",
                 answer: "Certo",
-                rationale: "A assertiva está de acordo com o disposto no inciso XIV do Art. 1º."
+                rationale: "A assertiva está correta, pois, embora parcial, reflete com precisão parte do conteúdo do inciso XI, indicando corretamente o imposto, os destinatários e um dos fundamentos constitucionais da norma.<br><br><strong>Dispositivo Legal:</strong><br>XI – efetuar, observada a legislação pertinente, o cálculo das quotas dos recursos provenientes do produto da arrecadação do Imposto sobre Produtos Industrializados destinadas aos estados e ao Distrito Federal, proporcionalmente ao valor das respectivas exportações de produtos industrializados, de que tratam o inciso II do art. 159 e o parágrafo único do art. 161 da Constituição Federal;"
             },
             {
-                question: "O julgamento de infrações administrativas pelo TCU visa à aplicação de penalidades, como multas.",
+                question: "Compete ao TCU emitir parecer prévio sobre as contas do governo de território federal, no prazo de sessenta dias, a contar de seu recebimento.",
                 answer: "Certo",
-                rationale: "O final do inciso XIV do Art. 1º explicita que o objetivo do processo e julgamento é a \"aplicação de penalidades\"."
+                rationale: "A assertiva está correta, pois descreve de forma literal a competência do Tribunal, o objeto da análise, o prazo e o marco inicial para sua contagem, conforme estabelecido no inciso XII do Art. 1º.<br><br><strong>Dispositivo Legal:</strong><br>XII – emitir, nos termos do § 2º do art. 33 da Constituição Federal, parecer prévio sobre as contas do governo de território federal, no prazo de sessenta dias, a contar de seu recebimento;"
             },
             {
-                question: "Compete ao TCU acompanhar, fiscalizar e avaliar os processos de desestatização realizados pela administração pública federal.",
-                answer: "Certo",
-                rationale: "A questão corresponde à parte inicial do inciso XV do Art. 1º."
-            },
-            {
-                question: "A competência do TCU sobre desestatização abrange as privatizações de empresas, incluindo instituições financeiras, e as concessões, permissões e autorizações de serviço público.",
-                answer: "Certo",
-                rationale: "O inciso XV do Art. 1º detalha o escopo da fiscalização dos processos de desestatização, confirmando o conteúdo da assertiva."
-            },
-            {
-                question: "O acompanhamento dos processos de desestatização pelo TCU não inclui as concessões de serviço público.",
+                question: "Compete ao TCU emitir parecer prévio sobre as contas do governo de território federal, no prazo de trinta dias, a contar de seu recebimento.",
                 answer: "Errado",
-                rationale: "O inciso XV do Art. 1º inclui expressamente \"as concessões, permissões e autorizações de serviço público\" em sua competência fiscalizatória."
+                rationale: "A assertiva está incorreta. O erro reside na alteração do prazo. A norma legal estipula um prazo de \"sessenta dias\", e não de \"trinta dias\".<br><br><strong>Dispositivo Legal:</strong><br>XII – emitir, nos termos do § 2º do art. 33 da Constituição Federal, parecer prévio sobre as contas do governo de território federal, no prazo de sessenta dias, a contar de seu recebimento;"
             },
             {
-                question: "O TCU deve representar ao Poder competente sobre irregularidades ou abusos apurados, indicando o ato inquinado e definindo responsabilidades.",
-                answer: "Certo",
-                rationale: "A assertiva reproduz fielmente o conteúdo do inciso XVI do Art. 1º."
-            },
-            {
-                question: "A representação sobre irregularidades feita pelo TCU não pode apontar responsabilidades de ministro de Estado.",
+                question: "Compete ao TCU julgar definitivamente as contas do governo de território federal.",
                 answer: "Errado",
-                rationale: "O final do inciso XVI do Art. 1º estabelece que a representação pode definir responsabilidades, \"mesmo as de ministro de Estado ou de autoridade de nível hierárquico equivalente\"."
+                rationale: "A assertiva está incorreta. A competência do TCU em relação às contas do governo de território federal é para \"emitir parecer prévio\", e não para proferir um \"julgamento definitivo\".<br><br><strong>Dispositivo Legal:</strong><br>XII – emitir, nos termos do § 2º do art. 33 da Constituição Federal, parecer prévio sobre as contas do governo de território federal..."
             },
             {
-                question: "É competência do TCU aplicar aos responsáveis as sanções e adotar as medidas cautelares previstas em seu Regimento.",
+                question: "Compete ao TCU fiscalizar, no âmbito de suas atribuições, o cumprimento, por parte dos órgãos e entidades da União, das normas da Lei Complementar n° 101, de 4 de maio de 2000 – Lei de Responsabilidade Fiscal.",
                 answer: "Certo",
-                rationale: "A questão está em conformidade com o inciso XVII do Art. 1º."
+                rationale: "A assertiva está correta, reproduzindo fielmente a competência do Tribunal para fiscalizar o cumprimento da Lei de Responsabilidade Fiscal pelos órgãos e entidades federais, nos termos do inciso XIII.<br><br><strong>Dispositivo Legal:</strong><br>XIII – fiscalizar, no âmbito de suas atribuições, o cumprimento, por parte dos órgãos e entidades da União, das normas da Lei Complementar n° 101, de 4 de maio de 2000 – Lei de Responsabilidade Fiscal;"
             },
             {
-                question: "O TCU não pode adotar medidas cautelares, apenas aplicar sanções após o trânsito em julgado do processo.",
+                question: "É competência do TCU fiscalizar o cumprimento, por parte dos órgãos e entidades da União, das normas da Lei nº 8.666, de 21 de junho de 1993 – Lei de Licitações e Contratos.",
                 answer: "Errado",
-                rationale: "O inciso XVII do Art. 1º menciona expressamente a competência para \"adotar as medidas cautelares previstas neste Regimento\"."
+                rationale: "A assertiva está incorreta. Embora o TCU fiscalize a aplicação da Lei de Licitações, o dispositivo legal em questão (inciso XIII) refere-se especificamente à fiscalização do cumprimento das normas da \"Lei Complementar n° 101, de 4 de maio de 2000 – Lei de Responsabilidade Fiscal\".<br><br><strong>Dispositivo Legal:</strong><br>XIII – fiscalizar, no âmbito de suas atribuições, o cumprimento, por parte dos órgãos e entidades da União, das normas da Lei Complementar n° 101, de 4 de maio de 2000 – Lei de Responsabilidade Fiscal;"
             },
             {
-                question: "O TCU deve fiscalizar as contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo.",
+                question: "Compete ao TCU processar e julgar as infrações administrativas contra as finanças públicas e a responsabilidade fiscal tipificadas na legislação vigente, com vistas à aplicação de penalidades.",
                 answer: "Certo",
-                rationale: "A assertiva corresponde exatamente ao disposto no inciso XVIII do Art. 1º."
+                rationale: "A assertiva está correta, pois corresponde exatamente à competência do Tribunal para processar, julgar e aplicar penalidades relativas a infrações administrativas contra as finanças públicas, conforme o inciso XIV.<br><br><strong>Dispositivo Legal:</strong><br>XIV – processar e julgar as infrações administrativas contra as finanças públicas e a responsabilidade fiscal tipificadas na legislação vigente, com vistas à aplicação de penalidades;"
             },
             {
-                question: "A fiscalização do TCU sobre empresas supranacionais ocorre apenas quando a União participa de forma direta em seu capital social.",
+                question: "Compete ao TCU processar e julgar os crimes contra as finanças públicas e a responsabilidade fiscal tipificados na legislação vigente.",
                 answer: "Errado",
-                rationale: "O inciso XVIII do Art. 1º abrange a participação da União \"de forma direta ou indireta\"."
+                rationale: "A assertiva está incorreta. A competência do TCU, descrita no inciso XIV, é para processar e julgar \"infrações administrativas\", e não \"crimes\", cuja competência de julgamento pertence ao Poder Judiciário.<br><br><strong>Dispositivo Legal:</strong><br>XIV – processar e julgar as infrações administrativas contra as finanças públicas e a responsabilidade fiscal tipificadas na legislação vigente, com vistas à aplicação de penalidades;"
+            },
+            {
+                question: "É competência do TCU acompanhar, fiscalizar e avaliar os processos de desestatização realizados pela administração pública federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, descrevendo de forma precisa o escopo geral da atuação do TCU nos processos de desestatização conduzidos no âmbito federal, de acordo com o início do inciso XV.<br><br><strong>Dispositivo Legal:</strong><br>XV – acompanhar, fiscalizar e avaliar os processos de desestatização realizados pela administração pública federal..."
+            },
+            {
+                question: "É competência do TCU acompanhar, fiscalizar e avaliar os processos de desestatização realizados pela administração pública federal, estadual e municipal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta porque amplia indevidamente a competência do TCU. O inciso XV delimita a atuação do Tribunal aos processos de desestatização realizados pela \"administração pública federal\".<br><br><strong>Dispositivo Legal:</strong><br>XV – acompanhar, fiscalizar e avaliar os processos de desestatização realizados pela administração pública federal..."
+            },
+            {
+                question: "A competência do TCU para fiscalizar os processos de desestatização compreende as privatizações de empresas, incluindo instituições financeiras, e as concessões, permissões e autorizações de serviço público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, detalhando de forma exata os tipos de processos de desestatização que estão sob a fiscalização do Tribunal, conforme a segunda parte do inciso XV.<br><br><strong>Dispositivo Legal:</strong><br>XV – acompanhar, fiscalizar e avaliar os processos de desestatização realizados pela administração pública federal, compreendendo as privatizações de empresas, incluindo instituições financeiras, e as concessões, permissões e autorizações de serviço público, nos termos do art. 175 da Constituição Federal e das normas legais pertinentes;"
+            },
+            {
+                question: "A competência do TCU para fiscalizar os processos de desestatização compreende as privatizações de empresas, excluindo as instituições financeiras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na palavra \"excluindo\". O texto da lei é explícito ao afirmar que a fiscalização abrange as privatizações de empresas, \"incluindo instituições financeiras\".<br><br><strong>Dispositivo Legal:</strong><br>XV – [...] compreendendo as privatizações de empresas, incluindo instituições financeiras..."
+            },
+            {
+                question: "Compete ao TCU representar ao Poder competente sobre irregularidades ou abusos apurados, indicando o ato inquinado e definindo responsabilidades.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com precisão a competência do Tribunal para representar a outras esferas de poder quando identifica irregularidades, detalhando o conteúdo que tal representação deve ter, nos termos do inciso XVI.<br><br><strong>Dispositivo Legal:</strong><br>XVI – representar ao Poder competente sobre irregularidades ou abusos apurados, indicando o ato inquinado e definindo responsabilidades, mesmo as de ministro de Estado ou de autoridade de nível hierárquico equivalente;"
+            },
+            {
+                question: "Compete ao TCU punir diretamente os responsáveis por irregularidades ou abusos apurados, inclusive quando se tratar de ministro de Estado.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A competência descrita no inciso XVI é de \"representar ao Poder competente\", o que significa comunicar a irregularidade para que o órgão com atribuição para punir (seja ele o Judiciário, o Ministério Público, etc.) tome as providências. O TCU não pune diretamente no contexto deste dispositivo.<br><br><strong>Dispositivo Legal:</strong><br>XVI – representar ao Poder competente sobre irregularidades ou abusos apurados, indicando o ato inquinado e definindo responsabilidades, mesmo as de ministro de Estado ou de autoridade de nível hierárquico equivalente;"
+            },
+            {
+                question: "Ao representar sobre irregularidades, a competência do TCU abrange a definição de responsabilidades, mesmo as de ministro de Estado ou de autoridade de nível hierárquico equivalente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete fielmente a parte final do inciso XVI, que deixa claro que a apuração de responsabilidades pelo TCU alcança todos os níveis hierárquicos, incluindo ministros de Estado.<br><br><strong>Dispositivo Legal:</strong><br>XVI – representar ao Poder competente sobre irregularidades ou abusos apurados, indicando o ato inquinado e definindo responsabilidades, mesmo as de ministro de Estado ou de autoridade de nível hierárquico equivalente;"
+            },
+            {
+                question: "Ao representar sobre irregularidades, a competência do TCU para definir responsabilidades exclui as de ministro de Estado ou de autoridade de nível hierárquico equivalente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a competência \"exclui\" as responsabilidades de altas autoridades. A lei utiliza o termo \"mesmo\", que tem sentido inclusivo, para deixar claro que a competência do Tribunal se estende a elas.<br><br><strong>Dispositivo Legal:</strong><br>XVI – representar ao Poder competente sobre irregularidades ou abusos apurados, indicando o ato inquinado e definindo responsabilidades, mesmo as de ministro de Estado ou de autoridade de nível hierárquico equivalente;"
+            },
+            {
+                question: "Compete ao Tribunal de Contas da União aplicar aos responsáveis as sanções e adotar as medidas cautelares previstas no seu Regimento.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz com exatidão a competência do TCU para aplicar sanções e medidas cautelares aos responsáveis, conforme previsto no inciso XVII do Art. 1º.<br><br><strong>Dispositivo Legal:</strong><br>XVII – aplicar aos responsáveis as sanções e adotar as medidas cautelares previstas neste Regimento;"
+            },
+            {
+                question: "Compete ao Tribunal de Contas da União aplicar aos responsáveis apenas as sanções previstas em seu Regimento, sendo-lhe vedado adotar medidas cautelares.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em restringir a competência do Tribunal. O texto legal autoriza o TCU a aplicar tanto \"sanções\" quanto a \"adotar as medidas cautelares\".<br><br><strong>Dispositivo Legal:</strong><br>XVII – aplicar aos responsáveis as sanções e adotar as medidas cautelares previstas neste Regimento;"
+            },
+            {
+                question: "É da competência do TCU recomendar aos órgãos competentes a aplicação de sanções, mas não aplicá-las diretamente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O inciso XVII é claro ao atribuir ao TCU a competência de \"aplicar\" diretamente as sanções, e não apenas de recomendar a sua aplicação.<br><br><strong>Dispositivo Legal:</strong><br>XVII – aplicar aos responsáveis as sanções e adotar as medidas cautelares previstas neste Regimento;"
+            },
+            {
+                question: "Compete ao TCU fiscalizar as contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve literalmente a competência de fiscalização do TCU sobre as contas de empresas supranacionais com participação da União, nos exatos termos do inciso XVIII.<br><br><strong>Dispositivo Legal:</strong><br>XVIII – fiscalizar as contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo;"
+            },
+            {
+                question: "Compete ao TCU fiscalizar as contas nacionais das empresas supranacionais de cujo capital social a União participe, apenas de forma direta.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em limitar a forma de participação da União. A norma especifica que a competência do TCU abrange empresas em que a União participe de forma \"direta ou indireta\".<br><br><strong>Dispositivo Legal:</strong><br>XVIII – fiscalizar as contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo;"
+            },
+            {
+                question: "É competência do TCU fiscalizar as contas de todas as empresas estrangeiras com atuação no Brasil, independentemente da participação da União em seu capital social.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta porque generaliza e amplia indevidamente a competência do Tribunal. O inciso XVIII restringe a fiscalização às \"empresas supranacionais\" e condiciona essa fiscalização à participação da União, direta ou indireta, no capital social.<br><br><strong>Dispositivo Legal:</strong><br>XVIII – fiscalizar as contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo;"
             },
             {
                 question: "Compete ao TCU fiscalizar a aplicação de quaisquer recursos repassados pela União, mediante convênio, acordo, ajuste ou outros instrumentos congêneres, a estado, ao Distrito Federal ou a município.",
                 answer: "Certo",
-                rationale: "A questão reflete a primeira parte do inciso XIX do Art. 1º."
+                rationale: "A assertiva está correta, embora parcial. Ela descreve com precisão uma parte importante da competência do TCU, que é fiscalizar recursos transferidos via instrumentos como convênios aos entes federados, conforme o inciso XIX.<br><br><strong>Dispositivo Legal:</strong><br>XIX – fiscalizar a aplicação de quaisquer recursos repassados pela União, mediante convênio, acordo, ajuste ou outros instrumentos congêneres, a estado, ao Distrito Federal, a município, e a qualquer outra pessoa, física ou jurídica, pública ou privada;"
             },
             {
-                question: "A fiscalização do TCU sobre recursos repassados pela União não se aplica a transferências feitas a pessoas físicas ou entidades privadas.",
+                question: "A competência do TCU para fiscalizar recursos repassados pela União se restringe àqueles destinados a estado, ao Distrito Federal ou a município, excluindo pessoas físicas ou jurídicas de direito privado.",
                 answer: "Errado",
-                rationale: "O inciso XIX do Art. 1º estende a fiscalização a recursos repassados \"a qualquer outra pessoa, física ou jurídica, pública ou privada\"."
+                rationale: "A assertiva está incorreta. O erro reside na exclusão de outros possíveis recebedores dos recursos. O texto do inciso XIX é abrangente, estendendo a fiscalização a \"qualquer outra pessoa, física ou jurídica, pública ou privada\".<br><br><strong>Dispositivo Legal:</strong><br>XIX – fiscalizar a aplicação de quaisquer recursos repassados pela União, [...] a estado, ao Distrito Federal, a município, e a qualquer outra pessoa, física ou jurídica, pública ou privada;"
             },
             {
-                question: "O TCU deve acompanhar e fiscalizar o cálculo, a entrega e a aplicação de recursos repassados pela União a estados, DF ou municípios, por determinação legal.",
+                question: "Compete ao TCU acompanhar e fiscalizar, conforme o caso, o cálculo, a entrega e a aplicação de recursos repassados pela União, por determinação legal, a estado, ao Distrito Federal ou a município.",
                 answer: "Certo",
-                rationale: "A assertiva está de acordo com o conteúdo do inciso XX do Art. 1º."
+                rationale: "A assertiva está correta, descrevendo fielmente a competência do TCU para fiscalizar os repasses de recursos que ocorrem por força de lei aos entes da federação, conforme dispõe o inciso XX.<br><br><strong>Dispositivo Legal:</strong><br>XX – acompanhar e fiscalizar, conforme o caso, o cálculo, a entrega e a aplicação de recursos repassados pela União, por determinação legal, a estado, ao Distrito Federal ou a município, conforme dispuser a legislação específica e os respectivos normativos internos;"
             },
             {
-                question: "O acompanhamento de recursos repassados por determinação legal, previsto no inciso XX, é feito apenas na fase de aplicação, não abrangendo o cálculo e a entrega.",
+                question: "Compete ao TCU apenas acompanhar, mas não fiscalizar, a aplicação de recursos repassados pela União por determinação legal a estado, ao Distrito Federal ou a município.",
                 answer: "Errado",
-                rationale: "O inciso XX do Art. 1º é explícito ao incluir \"o cálculo, a entrega e a aplicação\" dos recursos no escopo da fiscalização."
+                rationale: "A assertiva está incorreta ao limitar a atuação do TCU. O inciso XX estabelece a competência para \"acompanhar e fiscalizar\", indicando duas ações distintas e cumulativas a cargo do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>XX – acompanhar e fiscalizar, conforme o caso, o cálculo, a entrega e a aplicação de recursos repassados pela União, por determinação legal, a estado, ao Distrito Federal ou a município..."
             },
             {
-                question: "Se verificada ilegalidade, o TCU pode assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei.",
-                answer: "Certo",
-                rationale: "A questão reproduz fielmente o disposto no inciso XXI do Art. 1º."
-            },
-            {
-                question: "Ao verificar uma ilegalidade, o TCU deve imediatamente sustar a execução do ato, sem antes dar oportunidade para o órgão sanar o problema.",
+                question: "O acompanhamento e a fiscalização de recursos repassados pela União, por determinação legal, ocorrem apenas sobre o cálculo e a entrega, não abrangendo a aplicação desses recursos.",
                 answer: "Errado",
-                rationale: "O procedimento correto, conforme o inciso XXI do Art. 1º, é primeiramente \"assinar prazo\" para o cumprimento da lei. A sustação do ato é uma medida subsequente, caso a determinação não seja atendida."
+                rationale: "A assertiva está incorreta. O texto do inciso XX é explícito ao determinar que a competência do TCU abrange três fases: o \"cálculo, a entrega e a aplicação\" dos recursos.<br><br><strong>Dispositivo Legal:</strong><br>XX – acompanhar e fiscalizar, conforme o caso, o cálculo, a entrega e a aplicação de recursos repassados pela União, por determinação legal..."
             },
             {
-                question: "Caso sua determinação para o cumprimento da lei não seja atendida, o TCU pode sustar a execução do ato impugnado, comunicando a decisão à Câmara dos Deputados e ao Senado Federal.",
+                question: "Compete ao TCU assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada ilegalidade.",
                 answer: "Certo",
-                rationale: "A assertiva está em total conformidade com o inciso XXII do Art. 1º."
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do TCU para fixar um prazo para a correção de ilegalidades constatadas, conforme o inciso XXI.<br><br><strong>Dispositivo Legal:</strong><br>XXI – assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada ilegalidade;"
             },
             {
-                question: "Ao sustar a execução de um ato, o TCU deve comunicar sua decisão apenas ao Senado Federal.",
+                question: "Compete ao TCU assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada qualquer impropriedade.",
                 answer: "Errado",
-                rationale: "O inciso XXII do Art. 1º exige a comunicação da decisão \"à Câmara dos Deputados e ao Senado Federal\"."
+                rationale: "A assertiva está incorreta. O erro está na condição que autoriza a ação do TCU. O dispositivo legal exige a verificação de \"ilegalidade\", que é um vício mais grave do que \"qualquer impropriedade\", que pode ser uma simples falha formal sem contrariar a lei.<br><br><strong>Dispositivo Legal:</strong><br>XXI – assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada ilegalidade;"
             },
             {
-                question: "É competência do TCU fiscalizar as declarações de bens e rendas apresentadas pelas autoridades e servidores públicos.",
-                answer: "Certo",
-                rationale: "A questão corresponde ao disposto no inciso XXIII do Art. 1º."
-            },
-            {
-                question: "O TCU deve decidir sobre denúncia que lhe seja encaminhada por qualquer cidadão, partido político, associação ou sindicato.",
-                answer: "Certo",
-                rationale: "A assertiva reflete precisamente o conteúdo do inciso XXIV do Art. 1º."
-            },
-            {
-                question: "Apenas partidos políticos e sindicatos podem encaminhar denúncias ao TCU.",
+                question: "Se verificada ilegalidade, poderá o TCU, a seu critério, assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei.",
                 answer: "Errado",
-                rationale: "O inciso XXIV do Art. 1º estabelece que a denúncia pode ser encaminhada por \"qualquer cidadão, partido político, associação ou sindicato\"."
+                rationale: "A assertiva está incorreta. O uso do verbo \"assinar\" no texto legal confere um caráter de poder-dever ao TCU, não se tratando de uma mera faculdade (\"poderá... a seu critério\"). Verificada a ilegalidade, o Tribunal tem a prerrogativa de determinar o prazo para a correção.<br><br><strong>Dispositivo Legal:</strong><br>XXI – assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada ilegalidade;"
+            },
+            {
+                question: "Se verificada ilegalidade, compete ao TCU unicamente aplicar a sanção correspondente, sendo vedado assinar prazo para que o órgão ou entidade adote providências para o cumprimento da lei.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao vedar uma competência expressa do Tribunal. O inciso XXI claramente confere ao TCU a prerrogativa de \"assinar prazo\" para o saneamento da ilegalidade, sendo esta uma medida que pode ser adotada antes ou em conjunto com a aplicação de sanções.<br><br><strong>Dispositivo Legal:</strong><br>XXI – assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada ilegalidade;"
+            },
+            {
+                question: "Compete ao TCU sustar, se não atendido, a execução do ato impugnado, comunicando a decisão à Câmara dos Deputados e ao Senado Federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à competência do TCU de sustar a execução de um ato, caso sua determinação anterior não seja cumprida, e de comunicar tal decisão às duas casas do Congresso Nacional, conforme o inciso XXII do Art. 1º.<br><br><strong>Dispositivo Legal:</strong><br>XXII – sustar, se não atendido, a execução do ato impugnado, comunicando a decisão à Câmara dos Deputados e ao Senado Federal;"
+            },
+            {
+                question: "Se não atendido em sua determinação, compete ao TCU anular a execução do ato impugnado, comunicando a decisão ao Congresso Nacional.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. A competência do TCU, neste caso, é de \"sustar\" (suspender) a execução do ato, e não de \"anular\" (invalidar), ato este que, via de regra, compete ao Judiciário ou à própria Administração.<br><br><strong>Dispositivo Legal:</strong><br>XXII – sustar, se não atendido, a execução do ato impugnado, comunicando a decisão à Câmara dos Deputados e ao Senado Federal;"
+            },
+            {
+                question: "Ao sustar a execução de ato impugnado, o TCU deve comunicar sua decisão apenas à Câmara dos Deputados, onde se inicia o processo legislativo orçamentário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por restringir a comunicação. O inciso XXII determina que a comunicação da decisão deve ser feita a ambas as casas legislativas federais: \"à Câmara dos Deputados e ao Senado Federal\".<br><br><strong>Dispositivo Legal:</strong><br>XXII – sustar, se não atendido, a execução do ato impugnado, comunicando a decisão à Câmara dos Deputados e ao Senado Federal;"
+            },
+            {
+                question: "Compete ao TCU fiscalizar as declarações de bens e rendas apresentadas pelas autoridades e servidores públicos.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Tribunal para fiscalizar o patrimônio de agentes públicos, conforme o inciso XXIII.<br><br><strong>Dispositivo Legal:</strong><br>XXIII – fiscalizar as declarações de bens e rendas apresentadas pelas autoridades e servidores públicos;"
+            },
+            {
+                question: "A competência fiscalizatória do TCU sobre declarações de bens e rendas restringe-se àquelas apresentadas pelas autoridades, excluindo-se os demais servidores públicos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o alcance da norma. O texto do inciso XXIII é claro ao abranger tanto as \"autoridades\" quanto os \"servidores públicos\".<br><br><strong>Dispositivo Legal:</strong><br>XXIII – fiscalizar as declarações de bens e rendas apresentadas pelas autoridades e servidores públicos;"
+            },
+            {
+                question: "Compete ao TCU decidir sobre denúncia que lhe seja encaminhada por qualquer cidadão, partido político, associação ou sindicato.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois elenca com precisão os legitimados para apresentar denúncia ao Tribunal de Contas da União, conforme a primeira parte do inciso XXIV.<br><br><strong>Dispositivo Legal:</strong><br>XXIV – decidir sobre denúncia que lhe seja encaminhada por qualquer cidadão, partido político, associação ou sindicato, bem como sobre representações em geral;"
+            },
+            {
+                question: "Apenas partidos políticos, associações e sindicatos podem encaminhar denúncia ao TCU, sendo vedado a qualquer cidadão, individualmente, fazê-lo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em excluir a figura do cidadão. O inciso XXIV expressamente confere legitimidade a \"qualquer cidadão\" para apresentar denúncia ao Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>XXIV – decidir sobre denúncia que lhe seja encaminhada por qualquer cidadão, partido político, associação ou sindicato, bem como sobre representações em geral;"
             },
             {
                 question: "Compete ao TCU decidir sobre consulta que lhe seja formulada por autoridade competente, a respeito de dúvida suscitada na aplicação de dispositivos legais e regulamentares concernentes a matéria de sua competência.",
                 answer: "Certo",
-                rationale: "A questão reproduz o texto do inciso XXV do Art. 1º."
+                rationale: "A assertiva está correta, pois descreve fielmente todos os requisitos para a formulação de uma consulta ao TCU: deve ser feita por autoridade competente, versar sobre dúvida na aplicação de normas e tratar de matéria da competência do Tribunal, nos exatos termos do inciso XXV.<br><br><strong>Dispositivo Legal:</strong><br>XXV – decidir sobre consulta que lhe seja formulada por autoridade competente, a respeito de dúvida suscitada na aplicação de dispositivos legais e regulamentares concernentes a matéria de sua competência;"
             },
             {
-                question: "Qualquer cidadão pode formular consulta ao TCU a respeito de dúvida na aplicação de dispositivos legais.",
+                question: "Compete ao TCU decidir sobre consulta que lhe seja formulada por qualquer cidadão a respeito de dúvida suscitada na aplicação de dispositivos legais concernentes a matéria de sua competência.",
                 answer: "Errado",
-                rationale: "O inciso XXV do Art. 1º restringe a formulação de consulta à \"autoridade competente\"."
+                rationale: "A assertiva está incorreta. O erro está em quem pode formular a consulta. A lei restringe essa prerrogativa à \"autoridade competente\", não a estendendo a \"qualquer cidadão\".<br><br><strong>Dispositivo Legal:</strong><br>XXV – decidir sobre consulta que lhe seja formulada por autoridade competente, a respeito de dúvida suscitada na aplicação de dispositivos legais e regulamentares concernentes a matéria de sua competência;"
             },
             {
-                question: "O TCU deve decidir sobre representações relativas a licitações e contratos administrativos.",
+                question: "Compete ao TCU decidir sobre consulta que lhe seja formulada por autoridade competente a respeito de dúvida suscitada na aplicação de quaisquer dispositivos legais, mesmo que não concernentes a matéria de sua competência.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside em ampliar o objeto da consulta. O inciso XXV delimita que a dúvida deve ser sobre dispositivos legais \"concernentes a matéria de sua competência\".<br><br><strong>Dispositivo Legal:</strong><br>XXV – decidir sobre consulta que lhe seja formulada por autoridade competente, a respeito de dúvida suscitada na aplicação de dispositivos legais e regulamentares concernentes a matéria de sua competência;"
+            },
+            {
+                question: "Compete ao TCU decidir sobre representações relativas a licitações e contratos administrativos.",
                 answer: "Certo",
-                rationale: "A assertiva está de acordo com a parte inicial do inciso XXVI do Art. 1º."
+                rationale: "A assertiva está correta e, embora parcial, descreve de forma precisa uma das competências do Tribunal para decidir sobre representações, conforme a primeira parte do inciso XXVI.<br><br><strong>Dispositivo Legal:</strong><br>XXVI – decidir sobre representações relativas a licitações e contratos administrativos..."
             },
             {
-                question: "A competência do TCU para decidir sobre representações não abrange o descumprimento da notificação obrigatória a câmaras municipais sobre a liberação de recursos federais.",
+                question: "É competência do TCU decidir sobre representações relativas ao descumprimento da obrigatoriedade de que as câmaras municipais e os partidos políticos sejam notificados da liberação de recursos federais para os respectivos municípios.",
+                answer: "Certo",
+                rationale: "A assertiva está correta. Ela aborda de forma fiel parte da competência prevista no inciso XXVI, que trata da fiscalização da publicidade na liberação de recursos federais.<br><br><strong>Dispositivo Legal:</strong><br>XXVI – decidir sobre representações relativas [...] ao descumprimento da obrigatoriedade de que as câmaras municipais, os partidos políticos, os sindicatos de trabalhadores e as entidades empresariais sejam notificados da liberação de recursos federais para os respectivos municípios, nos termos da legislação vigente;"
+            },
+            {
+                question: "É competência do TCU decidir sobre representações relativas ao descumprimento da obrigatoriedade de que as prefeituras municipais sejam notificadas da liberação de recursos federais.",
                 answer: "Errado",
-                rationale: "O inciso XXVI do Art. 1º inclui expressamente em sua competência a decisão sobre representações relativas \"ao descumprimento da obrigatoriedade de que as câmaras municipais (...) sejam notificados da liberação de recursos federais\"."
+                rationale: "A assertiva está incorreta. O erro está na troca de um dos destinatários da notificação. O inciso XXVI menciona as \"câmaras municipais\", e não as \"prefeituras municipais\", como uma das entidades que devem ser notificadas.<br><br><strong>Dispositivo Legal:</strong><br>XXVI – decidir sobre representações relativas [...] ao descumprimento da obrigatoriedade de que as câmaras municipais, os partidos políticos, os sindicatos de trabalhadores e as entidades empresariais sejam notificados..."
+            },
+            {
+                question: "Compete ao TCU decidir sobre representações relativas ao descumprimento da obrigatoriedade de que sindicatos de trabalhadores e entidades empresariais sejam notificados da liberação de recursos federais para os respectivos municípios.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a parte final da lista de entidades que devem ser notificadas sobre a liberação de recursos federais, cuja omissão pode ser objeto de representação ao TCU, conforme o inciso XXVI.<br><br><strong>Dispositivo Legal:</strong><br>XXVI – decidir sobre representações relativas [...] ao descumprimento da obrigatoriedade de que as câmaras municipais, os partidos políticos, os sindicatos de trabalhadores e as entidades empresariais sejam notificados da liberação de recursos federais para os respectivos municípios, nos termos da legislação vigente;"
+            },
+            {
+                question: "Compete ao TCU decidir sobre representações relativas ao descumprimento da obrigatoriedade de que as câmaras municipais sejam notificadas da liberação de recursos estaduais para os respectivos municípios.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na origem dos recursos. A competência do TCU, neste dispositivo, refere-se à fiscalização da notificação sobre a liberação de \"recursos federais\", e não de \"recursos estaduais\".<br><br><strong>Dispositivo Legal:</strong><br>XXVI – decidir sobre representações relativas [...] ao descumprimento da obrigatoriedade de que as câmaras municipais [...] sejam notificados da liberação de recursos federais para os respectivos municípios, nos termos da legislação vigente;"
             },
             {
                 question: "Compete ao TCU fiscalizar a aplicação dos recursos repassados ao Comitê Olímpico Brasileiro e ao Comitê Paraolímpico Brasileiro por força da legislação vigente.",
                 answer: "Certo",
-                rationale: "A questão corresponde exatamente ao disposto no inciso XXVII do Art. 1º."
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Tribunal de Contas da União para fiscalizar os recursos destinados aos comitês olímpico e paraolímpico, conforme o inciso XXVII do Art. 1º.<br><br><strong>Dispositivo Legal:</strong><br>XXVII – fiscalizar a aplicação dos recursos repassados ao Comitê Olímpico Brasileiro e ao Comitê Paraolímpico Brasileiro por força da legislação vigente;"
             },
             {
-                question: "É competência do TCU implementar e manter na Internet a página Contas Públicas, na forma definida em ato normativo.",
+                question: "Compete ao TCU fiscalizar a aplicação dos recursos repassados à Confederação Brasileira de Futebol e ao Comitê Olímpico Internacional por força da legislação vigente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na substituição das entidades fiscalizadas. O dispositivo legal especifica o \"Comitê Olímpico Brasileiro\" e o \"Comitê Paraolímpico Brasileiro\", e não a Confederação Brasileira de Futebol ou o Comitê Olímpico Internacional.<br><br><strong>Dispositivo Legal:</strong><br>XXVII – fiscalizar a aplicação dos recursos repassados ao Comitê Olímpico Brasileiro e ao Comitê Paraolímpico Brasileiro por força da legislação vigente;"
+            },
+            {
+                question: "Compete ao TCU implementar e manter na Internet a página Contas Públicas, na forma definida em ato normativo.",
                 answer: "Certo",
-                rationale: "A assertiva reproduz o texto do inciso XXVIII do Art. 1º."
+                rationale: "A assertiva está correta, pois descreve com exatidão a competência do Tribunal para manter o portal \"Contas Públicas\" na internet, de acordo com o que estabelece o inciso XXVIII.<br><br><strong>Dispositivo Legal:</strong><br>XXVIII – implementar e manter na Internet a página Contas Públicas, na forma definida em ato normativo;"
+            },
+            {
+                question: "Compete ao TCU implementar e manter na Internet o Portal da Transparência, na forma definida em ato normativo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no nome da página. Embora o TCU contribua com dados para o Portal da Transparência, a competência específica descrita no inciso XXVIII refere-se à página \"Contas Públicas\".<br><br><strong>Dispositivo Legal:</strong><br>XXVIII – implementar e manter na Internet a página Contas Públicas, na forma definida em ato normativo;"
             },
             {
                 question: "Compete ao TCU realizar outras fiscalizações ou exercer outras atribuições previstas em lei.",
                 answer: "Certo",
-                rationale: "O inciso XXIX do Art. 1º confere ao TCU uma competência residual para exercer atribuições que lhe sejam conferidas por outras leis."
+                rationale: "A assertiva está correta, pois reproduz literalmente o inciso XXIX, que funciona como uma norma de competência residual, permitindo que a lei atribua outras funções ao Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>XXIX – realizar outras fiscalizações ou exercer outras atribuições previstas em lei;"
             },
             {
-                question: "As competências do TCU estão listadas de forma exaustiva (rol taxativo) nos incisos do Art. 1º do Regimento Interno.",
+                question: "Compete ao TCU realizar outras fiscalizações ou exercer outras atribuições previstas exclusivamente na Constituição Federal.",
                 answer: "Errado",
-                rationale: "O inciso XXIX do Art. 1º demonstra que o rol de competências não é exaustivo, ao prever a possibilidade de \"outras fiscalizações ou exercer outras atribuições previstas em lei\"."
+                rationale: "A assertiva está incorreta ao restringir a fonte das novas atribuições. O inciso XXIX é claro ao mencionar que outras competências podem ser \"previstas em lei\", o que é mais amplo do que \"exclusivamente na Constituição Federal\".<br><br><strong>Dispositivo Legal:</strong><br>XXIX – realizar outras fiscalizações ou exercer outras atribuições previstas em lei;"
             },
             {
-                question: "Uma das competências do TCU é alterar seu próprio Regimento.",
+                question: "Compete ao Tribunal de Contas da União alterar seu próprio Regimento.",
                 answer: "Certo",
-                rationale: "A assertiva está em conformidade com o inciso XXX do Art. 1º, que trata da competência de auto-organização do Tribunal."
+                rationale: "A assertiva está correta, correspondendo de forma sucinta e precisa à competência expressa no inciso XXX.<br><br><strong>Dispositivo Legal:</strong><br>XXX – alterar este Regimento;"
             },
             {
-                question: "A alteração do Regimento Interno do TCU depende de aprovação do Congresso Nacional.",
+                question: "Compete ao TCU propor ao Congresso Nacional alterações em seu Regimento.",
                 answer: "Errado",
-                rationale: "O inciso XXX do Art. 1º estabelece que \"alterar este Regimento\" é uma competência do próprio Tribunal, refletindo sua autonomia."
+                rationale: "A assertiva está incorreta. O erro está em transformar uma competência própria em uma mera proposição a outro Poder. O inciso XXX confere ao próprio TCU a atribuição de \"alterar\" seu regimento.<br><br><strong>Dispositivo Legal:</strong><br>XXX – alterar este Regimento;"
             },
             {
-                question: "Compete ao TCU eleger seu Presidente e seu Vice-Presidente, e dar-lhes posse.",
+                question: "Compete ao TCU eleger seu Presidente e seu Vice‑Presidente, e dar‑lhes posse.",
                 answer: "Certo",
-                rationale: "A questão corresponde exatamente ao disposto no inciso XXXI do Art. 1º."
+                rationale: "A assertiva está correta, pois transcreve literalmente a competência do Tribunal para eleger e empossar seus dirigentes, conforme o inciso XXXI.<br><br><strong>Dispositivo Legal:</strong><br>XXXI – eleger seu Presidente e seu Vice‑Presidente, e dar‑lhes posse;"
             },
             {
-                question: "Compete ao TCU conceder licença, férias e outros afastamentos aos ministros, ministros-substitutos e membros do Ministério Público junto ao Tribunal.",
-                answer: "Certo",
-                rationale: "A assertiva reproduz a parte inicial do inciso XXXII do Art. 1º."
-            },
-            {
-                question: "A licença para tratamento de saúde por prazo superior a seis meses, para ministros do TCU, independe de inspeção por junta médica.",
+                question: "Compete ao TCU eleger seu Presidente, seu Vice‑Presidente e seu Corregedor, e dar‑lhes posse.",
                 answer: "Errado",
-                rationale: "O final do inciso XXXII do Art. 1º exige expressamente que a licença para tratamento de saúde por prazo superior a seis meses depende \"de inspeção por junta médica\"."
+                rationale: "A assertiva está incorreta por adicionar uma função não prevista no dispositivo. O inciso XXXI menciona expressamente apenas a eleição do \"Presidente\" e do \"Vice-Presidente\".<br><br><strong>Dispositivo Legal:</strong><br>XXXI – eleger seu Presidente e seu Vice‑Presidente, e dar‑lhes posse;"
             },
             {
-                question: "É competência do TCU organizar sua Secretaria e prover-lhe os cargos, observada a legislação pertinente.",
+                question: "Compete ao TCU conceder licença, férias e outros afastamentos aos ministros, ministros‑substitutos e membros do Ministério Público junto ao Tribunal.",
                 answer: "Certo",
-                rationale: "A questão reflete o conteúdo do inciso XXXIII do Art. 1º."
+                rationale: "A assertiva está correta, pois descreve de forma precisa a competência administrativa do Tribunal em relação aos afastamentos de seus membros e dos membros do Ministério Público que atuam junto a ele, conforme a primeira parte do inciso XXXII.<br><br><strong>Dispositivo Legal:</strong><br>XXXII – conceder licença, férias e outros afastamentos aos ministros, ministros‑substitutos e membros do Ministério Público junto ao Tribunal..."
             },
             {
-                question: "O TCU pode prover os cargos de sua Secretaria sem a necessidade de observar a legislação pertinente.",
+                question: "A concessão de licença para tratamento de saúde por prazo superior a seis meses, para ministros, depende de inspeção por junta médica.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois especifica a condição exigida pela parte final do inciso XXXII para a concessão de licença saúde de longa duração a uma das autoridades mencionadas.<br><br><strong>Dispositivo Legal:</strong><br>XXXII – [...] dependendo de inspeção por junta médica a licença para tratamento de saúde por prazo superior a seis meses;"
+            },
+            {
+                question: "A concessão de licença para tratamento de saúde aos ministros do TCU, por qualquer prazo, depende de inspeção por junta médica.",
                 answer: "Errado",
-                rationale: "O inciso XXXIII do Art. 1º estabelece a necessidade de que o provimento dos cargos seja feito com a observância \"da legislação pertinente\"."
+                rationale: "A assertiva está incorreta ao generalizar a exigência. O inciso XXXII condiciona a inspeção por junta médica apenas às licenças para tratamento de saúde \"por prazo superior a seis meses\".<br><br><strong>Dispositivo Legal:</strong><br>XXXII – [...] dependendo de inspeção por junta médica a licença para tratamento de saúde por prazo superior a seis meses;"
+            },
+            {
+                question: "Compete ao TCU conceder licença, férias e outros afastamentos apenas aos ministros, excluindo-se os ministros-substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o rol de autoridades. O texto do inciso XXXII é explícito ao incluir \"ministros, ministros-substitutos e membros do Ministério Público junto ao Tribunal\".<br><br><strong>Dispositivo Legal:</strong><br>XXXII – conceder licença, férias e outros afastamentos aos ministros, ministros‑substitutos e membros do Ministério Público junto ao Tribunal..."
+            },
+            {
+                question: "A licença para tratamento de saúde de membros do Ministério Público junto ao Tribunal, por prazo superior a três meses, depende de inspeção por junta médica.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na alteração do prazo. A norma legal estipula que a exigência da inspeção médica ocorre para licenças por prazo \"superior a seis meses\", e não três.<br><br><strong>Dispositivo Legal:</strong><br>XXXII – [...] dependendo de inspeção por junta médica a licença para tratamento de saúde por prazo superior a seis meses;"
+            },
+            {
+                question: "Compete ao Tribunal de Contas da União organizar sua Secretaria e prover‑lhe os cargos, observada a legislação pertinente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do TCU para gerir sua própria estrutura administrativa e de pessoal, sempre em conformidade com a lei, conforme o inciso XXXIII do Art. 1º.<br><br><strong>Dispositivo Legal:</strong><br>XXXIII – organizar sua Secretaria e prover‑lhe os cargos, observada a legislação pertinente;"
+            },
+            {
+                question: "Compete ao Tribunal de Contas da União organizar sua Secretaria e prover‑lhe os cargos, independentemente da legislação pertinente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na expressão \"independentemente da legislação pertinente\", que contradiz frontalmente o texto legal. O inciso XXXIII condiciona expressamente essa competência à observância da legislação.<br><br><strong>Dispositivo Legal:</strong><br>XXXIII – organizar sua Secretaria e prover‑lhe os cargos, observada a legislação pertinente;"
+            },
+            {
+                question: "Compete ao Tribunal de Contas da União propor ao Congresso Nacional a organização de sua Secretaria e o provimento de seus cargos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em transformar uma competência direta em uma mera proposição. O inciso XXXIII confere ao próprio TCU a atribuição de \"organizar\" sua Secretaria e \"prover\" seus cargos, não dependendo de proposta ao Congresso para tais atos.<br><br><strong>Dispositivo Legal:</strong><br>XXXIII – organizar sua Secretaria e prover‑lhe os cargos, observada a legislação pertinente;"
             },
             {
                 question: "Compete ao TCU propor ao Congresso Nacional a criação, transformação e extinção de cargos e funções do quadro de pessoal de sua Secretaria.",
                 answer: "Certo",
-                rationale: "A assertiva está em conformidade com a primeira parte do inciso XXXIV do Art. 1º."
+                rationale: "A assertiva está correta, descrevendo com precisão a competência do Tribunal para apresentar propostas ao Poder Legislativo referentes à alteração de seu quadro de pessoal, nos termos da primeira parte do inciso XXXIV.<br><br><strong>Dispositivo Legal:</strong><br>XXXIV – propor ao Congresso Nacional a criação, transformação e extinção de cargos e funções do quadro de pessoal de sua Secretaria, bem como a fixação da respectiva remuneração."
             },
             {
-                question: "Compete ao TCU fixar a remuneração dos cargos e funções do quadro de pessoal de sua Secretaria por ato próprio.",
+                question: "Compete ao Tribunal de Contas da União criar, transformar e extinguir, por ato próprio, os cargos e funções do quadro de pessoal de sua Secretaria.",
                 answer: "Errado",
-                rationale: "O inciso XXXIV do Art. 1º estabelece que o TCU deve \"propor ao Congresso Nacional (...) a fixação da respectiva remuneração\", indicando que a competência para a fixação final é do Legislativo."
+                rationale: "A assertiva está incorreta. O erro fundamental está em afirmar que o TCU pode \"criar, transformar e extinguir\" cargos por ato próprio. A competência do Tribunal, segundo o inciso XXXIV, é de \"propor ao Congresso Nacional\" tais alterações, pois a criação de cargos públicos depende de lei.<br><br><strong>Dispositivo Legal:</strong><br>XXXIV – propor ao Congresso Nacional a criação, transformação e extinção de cargos e funções do quadro de pessoal de sua Secretaria..."
+            },
+            {
+                question: "Compete ao TCU fixar, por ato próprio, a remuneração dos cargos e funções do quadro de pessoal de sua Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. Assim como a criação de cargos, a fixação de remuneração de servidores públicos também depende de lei. A competência do TCU, conforme a parte final do inciso XXXIV, é de \"propor ao Congresso Nacional\" a fixação da remuneração, e não de fixá-la diretamente.<br><br><strong>Dispositivo Legal:</strong><br>XXXIV – propor ao Congresso Nacional a criação, transformação e extinção de cargos e funções do quadro de pessoal de sua Secretaria, bem como a fixação da respectiva remuneração."
             },
             {
                 question: "No julgamento de contas e na fiscalização que lhe compete, o Tribunal decidirá sobre a legalidade, a legitimidade e a economicidade dos atos de gestão e das despesas deles decorrentes.",
                 answer: "Certo",
-                rationale: "A assertiva corresponde exatamente ao conteúdo da primeira parte do § 1º do Art. 1º."
+                rationale: "A assertiva está correta, pois corresponde fielmente à primeira parte do § 1º do Art. 1º, descrevendo os três critérios (legalidade, legitimidade e economicidade) que o TCU utiliza para avaliar os atos de gestão e as despesas.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. No julgamento de contas e na fiscalização que lhe compete, o Tribunal decidirá sobre a legalidade, a legitimidade e a economicidade dos atos de gestão e das despesas deles decorrentes, bem como sobre a aplicação de subvenções e a renúncia de receitas."
             },
             {
-                question: "No julgamento de contas, o Tribunal decide apenas sobre a legalidade dos atos, não abrangendo a legitimidade e a economicidade.",
+                question: "No julgamento de contas e na fiscalização que lhe compete, o Tribunal decidirá também sobre a aplicação de subvenções e a renúncia de receitas.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois transcreve com exatidão a parte final do § 1º, que complementa o escopo de decisão do Tribunal, incluindo a análise da aplicação de subvenções e da renúncia de receitas.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. No julgamento de contas e na fiscalização que lhe compete, o Tribunal decidirá sobre a legalidade, a legitimidade e a economicidade dos atos de gestão e das despesas deles decorrentes, bem como sobre a aplicação de subvenções e a renúncia de receitas."
+            },
+            {
+                question: "No julgamento de contas, o Tribunal decidirá sobre a legalidade e a legitimidade dos atos de gestão, mas não sobre a sua economicidade.",
                 answer: "Errado",
-                rationale: "O § 1º do Art. 1º é claro ao incluir a análise da \"legalidade, a legitimidade e a economicidade\". Essa é a chamada \"tríplice dimensão\" da fiscalização."
+                rationale: "A assertiva está incorreta. O erro consiste em excluir o critério da \"economicidade\" do âmbito de decisão do TCU. O § 1º estabelece expressamente que o Tribunal decidirá sobre a legalidade, a legitimidade e a economicidade dos atos.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. No julgamento de contas e na fiscalização que lhe compete, o Tribunal decidirá sobre a legalidade, a legitimidade e a economicidade dos atos de gestão..."
             },
             {
-                question: "O julgamento do TCU também abrange a decisão sobre a aplicação de subvenções e a renúncia de receitas.",
+                question: "As menções a ministro‑substituto no Regimento Interno referem‑se ao cargo de que trata o art. 73, § 4º, da Constituição Federal, cujos titulares substituem os ministros e exercem as demais atribuições da judicatura.",
                 answer: "Certo",
-                rationale: "O final do § 1º do Art. 1º complementa o escopo do julgamento e da fiscalização, incluindo \"a aplicação de subvenções e a renúncia de receitas\"."
+                rationale: "A assertiva está correta, pois descreve de forma precisa a definição e as atribuições gerais do cargo de ministro-substituto, em conformidade com o início do § 2º.<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. Todas as menções a ministro‑substituto constantes deste Regimento Interno referem‑se ao cargo de que trata o art. 73, § 4º, da Constituição Federal, cujos titulares, nos termos do texto constitucional, substituem os ministros e exercem as demais atribuições da judicatura..."
             },
             {
-                question: "As menções a ministro-substituto no Regimento Interno referem-se ao cargo de que trata o art. 73, § 4º, da Constituição Federal.",
-                answer: "Certo",
-                rationale: "A assertiva está em conformidade com o § 2º do Art. 1º, que esclarece a terminologia usada no regimento."
-            },
-            {
-                question: "Os ministros-substitutos, nos termos do texto constitucional, substituem os ministros e exercem as demais atribuições da judicatura, como presidir e relatar processos com proposta de decisão.",
-                answer: "Certo",
-                rationale: "A questão reflete com precisão as atribuições dos ministros-substitutos, conforme descrito no § 2º do Art. 1º."
-            },
-            {
-                question: "Os ministros-substitutos apenas substituem os ministros em suas ausências, não podendo exercer as demais atribuições da judicatura, como relatar processos.",
+                question: "Os ministros-substitutos, nos termos do texto constitucional, substituem os ministros, mas lhes é vedado presidir processos ou relatá-los com proposta de decisão.",
                 answer: "Errado",
-                rationale: "O § 2º do Art. 1º afirma que os ministros-substitutos \"exercem as demais atribuições da judicatura, presidindo processos e relatando-os com proposta de decisão\"."
+                rationale: "A assertiva está incorreta. O erro está em vedar atribuições que são expressamente conferidas aos ministros-substitutos. O § 2º afirma que eles exercem as atribuições da judicatura, \"presidindo processos e relatando‑os com proposta de decisão\".<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. [...] cujos titulares, nos termos do texto constitucional, substituem os ministros e exercem as demais atribuições da judicatura, presidindo processos e relatando‑os com proposta de decisão, segundo o que dispõe o art. 78, parágrafo único, da Lei nº 8.443/1992."
             },
             {
-                question: "Ao Tribunal de Contas da União assiste o poder regulamentar.",
-                answer: "Certo",
-                rationale: "A assertiva corresponde à parte inicial do Art. 2º."
-            },
-            {
-                question: "Em consequência de seu poder regulamentar, o TCU pode expedir atos normativos sobre matérias de sua competência e sobre a organização dos processos que lhe devam ser submetidos.",
-                answer: "Certo",
-                rationale: "A questão reproduz o conteúdo central do Art. 2º, detalhando o alcance do poder regulamentar do Tribunal."
-            },
-            {
-                question: "O poder regulamentar do TCU não lhe permite expedir atos normativos sobre a organização interna dos processos.",
+                question: "As atribuições da judicatura exercidas pelos ministros-substitutos, como presidir e relatar processos, são disciplinadas exclusivamente pelo Regimento Interno do Tribunal.",
                 answer: "Errado",
-                rationale: "O Art. 2º estabelece expressamente que o TCU pode expedir atos normativos \"sobre a organização dos processos que lhe devam ser submetidos\"."
+                rationale: "A assertiva está incorreta ao indicar a fonte normativa errada. A parte final do § 2º especifica que tais atribuições são exercidas \"segundo o que dispõe o art. 78, parágrafo único, da Lei nº 8.443/1992\", e não exclusivamente pelo Regimento Interno.<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. [...] presidindo processos e relatando‑os com proposta de decisão, segundo o que dispõe o art. 78, parágrafo único, da Lei nº 8.443/1992."
             },
             {
-                question: "Os atos normativos expedidos pelo TCU obrigam ao seu cumprimento aqueles que lhe estão jurisdicionados.",
+                question: "Ao Tribunal de Contas da União assiste o poder regulamentar, podendo, em consequência, expedir atos normativos sobre matérias de sua competência e sobre a organização dos processos que lhe devam ser submetidos.",
                 answer: "Certo",
-                rationale: "A assertiva está de acordo com a parte final do Art. 2º, que estabelece a força vinculante dos atos normativos do Tribunal para seus jurisdicionados."
+                rationale: "A assertiva está correta, pois corresponde exatamente à descrição do poder regulamentar do TCU, conforme a primeira parte do Art. 2º do dispositivo legal fornecido.<br><br><strong>Dispositivo Legal:</strong><br>Art. 2º Ao Tribunal de Contas da União assiste o poder regulamentar, podendo, em consequência, expedir atos normativos sobre matérias de sua competência e sobre a organização dos processos que lhe devam ser submetidos, obrigando ao seu cumprimento aqueles que lhe estão jurisdicionados, sob pena de responsabilidade, nos termos do art. 3º da Lei nº 8.443, de 1992."
             },
             {
-                question: "O cumprimento dos atos normativos expedidos pelo TCU é facultativo para seus jurisdicionados.",
+                question: "Os atos normativos expedidos pelo TCU, no exercício de seu poder regulamentar, têm caráter de recomendação, não obrigando ao seu cumprimento os jurisdicionados.",
                 answer: "Errado",
-                rationale: "O Art. 2º afirma que os atos normativos são de cumprimento obrigatório (\"obrigando ao seu cumprimento\"), sob pena de responsabilidade."
+                rationale: "A assertiva está incorreta. O erro reside em classificar os atos normativos do TCU como mera recomendação. O Art. 2º é explícito ao afirmar que tais atos são de cumprimento compulsório, \"obrigando ao seu cumprimento aqueles que lhe estão jurisdicionados, sob pena de responsabilidade\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 2º Ao Tribunal de Contas da União assiste o poder regulamentar, [...] obrigando ao seu cumprimento aqueles que lhe estão jurisdicionados, sob pena de responsabilidade, nos termos do art. 3º da Lei nº 8.443, de 1992."
             },
             {
-                question: "O descumprimento dos atos normativos do TCU sujeita o responsável à pena de responsabilidade.",
+                question: "No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados, inclusive às armazenadas em meio eletrônico.",
                 answer: "Certo",
-                rationale: "O final do Art. 2º estabelece claramente as consequências do descumprimento: \"sob pena de responsabilidade, nos termos do art. 3º da Lei nº 8.443, de 1992\"."
+                rationale: "A assertiva está correta, pois descreve com precisão a prerrogativa do TCU de ter acesso amplo e irrestrito às informações necessárias para suas atividades de fiscalização, incluindo dados em formato eletrônico, conforme o Art. 3º.<br><br><strong>Dispositivo Legal:</strong><br>Art. 3º No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados, inclusive às armazenadas em meio eletrônico, bem como àquelas que tratem de despesas de caráter sigiloso."
             },
             {
-                question: "No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados.",
-                answer: "Certo",
-                rationale: "A questão corresponde à parte inicial do Art. 3º."
-            },
-            {
-                question: "O acesso do TCU às informações em órgãos e entidades jurisdicionados é restrito, dependendo de autorização judicial prévia.",
+                question: "No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados, exceto àquelas armazenadas em meio eletrônico.",
                 answer: "Errado",
-                rationale: "O Art. 3º assegura ao Tribunal acesso \"irrestrito\", o que significa que não há condicionantes como a autorização judicial para obter as informações necessárias ao exercício de sua competência."
+                rationale: "A assertiva está incorreta. O erro está na palavra \"exceto\". O Art. 3º deixa claro que o acesso irrestrito do Tribunal se estende \"inclusive às [fontes de informações] armazenadas em meio eletrônico\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 3º No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados, inclusive às armazenadas em meio eletrônico..."
             },
             {
-                question: "O acesso irrestrito a informações inclui aquelas armazenadas em meio eletrônico.",
+                question: "O acesso irrestrito do Tribunal a fontes de informações em órgãos jurisdicionados abrange também àquelas que tratem de despesas de caráter sigiloso.",
                 answer: "Certo",
-                rationale: "O Art. 3º especifica que o acesso abrange todas as fontes de informações, \"inclusive às armazenadas em meio eletrônico\"."
+                rationale: "A assertiva está correta, pois reproduz fielmente a parte final do Art. 3º, que garante ao TCU o acesso até mesmo a informações relativas a despesas sigilosas, não havendo exceção nesse sentido.<br><br><strong>Dispositivo Legal:</strong><br>Art. 3º No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados, [...] bem como àquelas que tratem de despesas de caráter sigiloso."
             },
             {
-                question: "O TCU não tem acesso a informações que tratem de despesas de caráter sigiloso.",
+                question: "No exercício de sua competência, o Tribunal terá acesso a todas as fontes de informações disponíveis, ressalvadas, contudo, aquelas que tratem de despesas de caráter sigiloso.",
                 answer: "Errado",
-                rationale: "O Art. 3º garante o acesso irrestrito \"bem como àquelas que tratem de despesas de caráter sigiloso\", não havendo exceção para esse tipo de informação."
-            },
-            {
-                question: "O sigilo de determinadas despesas pode ser oposto ao Tribunal de Contas da União como impedimento para sua atividade de fiscalização.",
-                answer: "Errado",
-                rationale: "Conforme o Art. 3º, o caráter sigiloso da despesa não impede o acesso do TCU à informação, reforçando a amplitude de seu poder fiscalizatório."
-            },
-            {
-                question: "A competência do TCU para julgar contas se aplica somente quando há dano ao erário.",
-                answer: "Errado",
-                rationale: "O inciso I do Art. 1º estabelece a competência para julgar as contas de quem utiliza, arrecada, guarda, gerencia ou administra recursos públicos, independentemente da ocorrência de dano, e também daqueles que derem causa a dano."
-            },
-            {
-                question: "Auditorias operacionais, que avaliam o desempenho da gestão, estão incluídas no escopo de fiscalização do TCU.",
-                answer: "Certo",
-                rationale: "O inciso II do Art. 1º menciona expressamente a realização de auditorias de natureza \"operacional\"."
-            },
-            {
-                question: "O TCU pode emitir parecer prévio sobre as contas do Presidente da República e também sobre as contas de governos de territórios federais.",
-                answer: "Certo",
-                rationale: "A competência para apreciar as contas do Presidente está no inciso VI, e a para emitir parecer sobre as contas de territórios federais está no inciso XII, ambos do Art. 1º."
-            },
-            {
-                question: "A apreciação dos atos de admissão de pessoal pelo TCU, para fins de registro, tem como única exceção as nomeações para cargo em comissão.",
-                answer: "Certo",
-                rationale: "Conforme o inciso VIII do Art. 1º, a única exceção expressa à regra de registro dos atos de admissão são \"as nomeações para cargo de provimento em comissão\"."
-            },
-            {
-                question: "O cálculo de quotas de fundos de participação e do Fundo de Exportação de Produtos Industrializados (FEX) são atribuições do TCU.",
-                answer: "Certo",
-                rationale: "A competência para o cálculo das quotas dos fundos de participação está no inciso IX, e a dos recursos do IPI para exportação (mecanismo similar ao FEX) está no inciso XI do Art. 1º."
-            },
-            {
-                question: "A representação ao Poder competente sobre irregularidades é uma medida que o TCU adota após esgotadas as suas próprias medidas sancionatórias.",
-                answer: "Errado",
-                rationale: "A representação, prevista no inciso XVI do Art. 1º, é uma medida que pode ser adotada a qualquer momento da fiscalização ao se constatar irregularidades que exijam a atuação de outro Poder, não dependendo do esgotamento de outras vias."
-            },
-            {
-                question: "O TCU pode fiscalizar recursos federais repassados a uma organização não governamental (ONG) por meio de um convênio.",
-                answer: "Certo",
-                rationale: "O inciso XIX do Art. 1º abrange a fiscalização de recursos repassados \"a qualquer outra pessoa, física ou jurídica, pública ou privada\", o que inclui as ONGs que recebem verbas federais."
-            },
-            {
-                question: "Se o Congresso Nacional não atender à comunicação do TCU sobre a sustação de um ato, o ato permanece sustado pela decisão do Tribunal.",
-                answer: "Errado",
-                rationale: "A competência para sustar contratos é, em última instância, do Congresso Nacional. Se o TCU susta o ato e comunica ao Congresso (inciso XXII do Art. 1º), e este não adota as providências, o Tribunal deve decidir sobre o mérito do caso, mas a sustação definitiva depende do Legislativo."
-            },
-            {
-                question: "O TCU possui competência para decidir sobre representações de licitantes que se sintam prejudicados em um certame promovido pela Administração Federal.",
-                answer: "Certo",
-                rationale: "O inciso XXVI do Art. 1º confere ao TCU a competência para \"decidir sobre representações relativas a licitações e contratos administrativos\"."
-            },
-            {
-                question: "A competência do TCU para organizar sua Secretaria inclui a prerrogativa de criar cargos sem necessidade de lei.",
-                answer: "Errado",
-                rationale: "O inciso XXXIV do Art. 1º estabelece que o TCU deve \"propor ao Congresso Nacional a criação, transformação e extinção de cargos\", o que significa que a criação depende de lei aprovada pelo Legislativo."
-            },
-            {
-                question: "A análise da economicidade de um ato de gestão significa verificar se ele foi realizado com o menor custo possível, mantendo a qualidade exigida.",
-                answer: "Certo",
-                rationale: "Este é o conceito de economicidade, que é um dos critérios de análise do TCU, conforme o § 1º do Art. 1º."
-            },
-            {
-                question: "O poder regulamentar do TCU, previsto no Art. 2º, permite que ele crie novas sanções não previstas na sua Lei Orgânica (Lei nº 8.443/1992).",
-                answer: "Errado",
-                rationale: "O poder regulamentar serve para detalhar e organizar a aplicação da lei, mas não pode inovar no ordenamento jurídico para criar sanções, o que violaria o princípio da legalidade. As sanções devem estar previstas em lei."
-            },
-            {
-                question: "O acesso irrestrito a informações, garantido pelo Art. 3º, sobrepõe-se a sigilos bancário e fiscal quando as informações são necessárias para o exercício do controle externo.",
-                answer: "Certo",
-                rationale: "A jurisprudência do Supremo Tribunal Federal (STF) e a própria natureza do controle externo confirmam que o TCU tem poder para requisitar informações protegidas por sigilo bancário e fiscal dos entes sob sua jurisdição, pois o sigilo não é oponível à atividade fiscalizatória do Estado."
-            },
-            {
-                question: "A competência para julgar as contas de um prefeito que administrou recursos de um convênio com a União é do Tribunal de Contas do respectivo Estado.",
-                answer: "Errado",
-                rationale: "Conforme o inciso I do Art. 1º, a competência é do TCU, pois trata-se de \"dinheiros, bens e valores públicos ou pelos quais a União responda\". A Súmula 230 do TCU consolida esse entendimento."
-            },
-            {
-                question: "O TCU pode realizar uma auditoria em um tribunal do Poder Judiciário Federal.",
-                answer: "Certo",
-                rationale: "O inciso II do Art. 1º estabelece que as fiscalizações podem ocorrer \"nas unidades administrativas dos Poderes Legislativo, Executivo e Judiciário\"."
-            },
-            {
-                question: "A apreciação de um ato de pensão militar pelo TCU é definitiva, não cabendo revisão posterior.",
-                answer: "Errado",
-                rationale: "O ato de registro no TCU tem natureza administrativa e pode ser revisto pelo Poder Judiciário, caso provocado. Além disso, o próprio TCU pode rever seus atos."
-            },
-            {
-                question: "A fiscalização da Lei de Responsabilidade Fiscal pelo TCU abrange a verificação dos limites de endividamento da União.",
-                answer: "Certo",
-                rationale: "A fiscalização do cumprimento da LRF (inciso XIII do Art. 1º) é ampla e inclui todos os seus preceitos, entre eles os limites para a dívida pública."
-            },
-            {
-                question: "A venda de uma empresa estatal federal é um processo de desestatização que deve ser acompanhado pelo TCU desde os estágios iniciais.",
-                answer: "Certo",
-                rationale: "Conforme o inciso XV do Art. 1º, o TCU deve acompanhar, fiscalizar e avaliar os processos de desestatização, o que inclui as privatizações. O acompanhamento se dá em todas as fases para garantir a legalidade e a economicidade."
-            },
-            {
-                question: "Um cidadão comum pode representar ao TCU sobre um possível superfaturamento em um contrato de obra pública federal.",
-                answer: "Certo",
-                rationale: "O inciso XXIV do Art. 1º legitima \"qualquer cidadão\" a encaminhar denúncia ao Tribunal sobre irregularidades."
-            },
-            {
-                question: "A competência para eleger o Presidente do TCU é do Presidente da República.",
-                answer: "Errado",
-                rationale: "O inciso XXXI do Art. 1º estabelece que é o próprio Tribunal que elege seu Presidente e Vice-Presidente."
-            },
-            {
-                question: "O TCU não possui jurisdição sobre o Ministério Público da União.",
-                answer: "Errado",
-                rationale: "O Ministério Público da União, como órgão federal, está sujeito à jurisdição do TCU no que tange à fiscalização contábil, financeira, orçamentária, operacional e patrimonial (Art. 1º, inciso II)."
-            },
-            {
-                question: "O julgamento sobre a legitimidade de um ato administrativo pelo TCU envolve uma análise além da conformidade legal, abrangendo princípios como moralidade e razoabilidade.",
-                answer: "Certo",
-                rationale: "A legitimidade, mencionada no § 1º do Art. 1º, é um conceito mais amplo que a legalidade estrita e abarca a conformidade do ato com os princípios da Administração Pública."
-            },
-            {
-                question: "Os atos normativos expedidos pelo TCU, com base em seu poder regulamentar, têm força de lei.",
-                answer: "Errado",
-                rationale: "Os atos normativos do TCU (como Resoluções e Instruções Normativas) são atos infralegais. Eles servem para regulamentar a lei, mas não podem contrariá-la nem inovar em matéria reservada à lei."
-            },
-            {
-                question: "O TCU, ao fiscalizar a aplicação de recursos de um convênio, pode aplicar multa diretamente ao prefeito de um município, caso constate irregularidade.",
-                answer: "Certo",
-                rationale: "O inciso XVII do Art. 1º, combinado com o inciso I, confere ao TCU a competência para aplicar sanções aos responsáveis pela má aplicação de recursos públicos federais."
-            },
-            {
-                question: "A fiscalização de empresas supranacionais pelo TCU só é possível se houver previsão expressa no tratado que constituiu a empresa.",
-                answer: "Certo",
-                rationale: "O inciso XVIII do Art. 1º condiciona essa fiscalização aos \"termos do tratado constitutivo\"."
-            },
-            {
-                question: "O TCU pode determinar a um órgão federal que anule um ato administrativo considerado ilegal.",
-                answer: "Certo",
-                rationale: "A competência para \"assinar prazo para que o órgão ou entidade adote as providências necessárias ao exato cumprimento da lei, se verificada ilegalidade\" (inciso XXI do Art. 1º) inclui a determinação para anulação de atos ilegais."
-            },
-            {
-                question: "A apreciação do TCU sobre o ato de aposentadoria de um servidor é condição para que o ato se torne legal e definitivo na esfera administrativa.",
-                answer: "Certo",
-                rationale: "O ato de aposentadoria é um ato complexo, que só se aperfeiçoa com o registro pelo TCU. Antes disso, ele é precário e pode ser modificado pela Administração."
-            },
-            {
-                question: "O TCU pode auditar a folha de pagamento de pessoal da Câmara dos Deputados.",
-                answer: "Certo",
-                rationale: "A Câmara dos Deputados é uma unidade administrativa do Poder Legislativo e, como tal, está sujeita às auditorias do TCU, conforme o inciso II do Art. 1º."
-            },
-            {
-                question: "A competência para julgar as contas de um dirigente de uma autarquia federal, como o INSS, é do próprio Poder Executivo.",
-                answer: "Errado",
-                rationale: "Como o INSS gerencia recursos da União, as contas de seus dirigentes são julgadas pelo TCU, nos termos do inciso I do Art. 1º."
-            },
-            {
-                question: "Um parecer prévio do TCU recomendando a rejeição das contas do Presidente da República obriga o Congresso Nacional a rejeitá-las.",
-                answer: "Errado",
-                rationale: "O parecer do TCU é opinativo (\"prévio\"). A decisão final sobre as contas do Presidente é política e de competência exclusiva do Congresso Nacional, que pode acatar ou não a recomendação do Tribunal."
-            },
-            {
-                question: "A análise da renúncia de receitas pelo TCU significa fiscalizar se os benefícios fiscais concedidos pela União estão de acordo com a lei e se atendem ao interesse público.",
-                answer: "Certo",
-                rationale: "A renúncia de receita (como isenções e anistias fiscais) é uma forma de gasto indireto e está sujeita ao controle do TCU, conforme o § 1º do Art. 1º."
-            },
-            {
-                question: "O TCU pode propor ao Congresso Nacional a fixação da remuneração dos seus próprios Ministros.",
-                answer: "Errado",
-                rationale: "O inciso XXXIV do Art. 1º refere-se à proposta de remuneração para os \"cargos e funções do quadro de pessoal de sua Secretaria\". A remuneração dos Ministros do TCU é equiparada à dos Ministros do Superior Tribunal de Justiça (STJ), cuja fixação segue outra sistemática constitucional."
-            },
-            {
-                question: "A organização da Secretaria do TCU e o provimento de seus cargos são matérias de competência exclusiva do Tribunal, não necessitando de observância de normas externas.",
-                answer: "Errado",
-                rationale: "O inciso XXXIII do Art. 1º é claro ao determinar que essas atribuições devem ser exercidas \"observada a legislação pertinente\", como as normas sobre concurso público e regime jurídico dos servidores."
-            },
-            {
-                question: "O acesso irrestrito a informações, previsto no Art. 3º, permite que o TCU requisite diretamente de um banco privado informações sobre a conta de uma empresa que executa uma obra pública federal com recursos da União.",
-                answer: "Certo",
-                rationale: "Como a empresa está sob a jurisdição do TCU por gerenciar recursos públicos (Art. 1º, I), o Tribunal pode requisitar as informações necessárias à fiscalização diretamente às instituições financeiras, conforme seu poder de acesso irrestrito a fontes de informação."
+                rationale: "A assertiva está incorreta ao criar uma exceção que não existe na norma. O Art. 3º é explícito ao afirmar que o acesso do Tribunal se estende \"bem como àquelas que tratem de despesas de caráter sigiloso\", garantindo o acesso em vez de ressalvá-lo.<br><br><strong>Dispositivo Legal:</strong><br>Art. 3º No exercício de sua competência, o Tribunal terá irrestrito acesso a todas as fontes de informações disponíveis em órgãos e entidades jurisdicionados, [...] bem como àquelas que tratem de despesas de caráter sigiloso."
             }
         ];
 
+
         const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
         const questionTextEl = document.getElementById('question-text');
         const btnCerto = document.getElementById('btn-certo');
         const btnErrado = document.getElementById('btn-errado');
         const feedbackEl = document.getElementById('feedback');
         const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
         const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
         const quizBodyEl = document.getElementById('quiz-body');
         const resultsContainerEl = document.getElementById('results-container');
         const scoreEl = document.getElementById('score');
@@ -790,18 +752,28 @@
 
         let currentQuestionIndex = 0;
         let score = 0;
+        let wrongAnswersList = [];
+        let currentQuizData = [...quizData];
 
         function loadQuestion() {
             resetState();
-            const currentQuestion = quizData[currentQuestionIndex];
+            const currentQuestion = currentQuizData[currentQuestionIndex];
             questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
             questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
         }
 
         function resetState() {
             feedbackEl.style.display = 'none';
             feedbackEl.className = '';
             nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
 
             btnCerto.disabled = false;
             btnErrado.disabled = false;
@@ -813,7 +785,7 @@
             btnCerto.disabled = true;
             btnErrado.disabled = true;
 
-            const currentQuestion = quizData[currentQuestionIndex];
+            const currentQuestion = currentQuizData[currentQuestionIndex];
             const isCorrect = selectedAnswer === currentQuestion.answer;
 
             if (isCorrect) {
@@ -823,9 +795,12 @@
             } else {
                 feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
                 feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
             }
             
-            // Highlight buttons
             if (currentQuestion.answer === 'Certo') {
                 btnCerto.classList.add('correct');
                 if (!isCorrect) btnErrado.classList.add('incorrect');
@@ -836,11 +811,20 @@
 
             feedbackEl.style.display = 'block';
             nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
         }
 
         function nextQuestion() {
             currentQuestionIndex++;
-            if (currentQuestionIndex < quizData.length) {
+            if (currentQuestionIndex < currentQuizData.length) {
                 loadQuestion();
             } else {
                 showResults();
@@ -852,8 +836,12 @@
             resultsContainerEl.style.display = 'block';
             restartBtn.style.display = 'inline-block';
             
-            const percentage = Math.round((score / quizData.length) * 100);
-            scoreEl.innerText = `Você acertou ${score} de ${quizData.length} questões (${percentage}%).`;
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
 
             let message = '';
             if (percentage >= 90) {
@@ -868,15 +856,24 @@
             scoreMessageEl.innerText = message;
         }
 
-        function restartQuiz() {
+        function restartQuiz(mode) {
             currentQuestionIndex = 0;
             score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
             resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
             quizBodyEl.style.display = 'block';
             loadQuestion();
         }
 
-        // Start the quiz
         loadQuestion();
     </script>
 
