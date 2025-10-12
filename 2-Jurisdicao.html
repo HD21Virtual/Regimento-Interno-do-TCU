@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurisdição</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Jurisdição</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "O Tribunal de Contas da União tem jurisdição própria e privativa, em todo o território nacional, sobre as pessoas e matérias sujeitas à sua competência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 4º, que define a natureza (própria e privativa), o alcance territorial (todo o território nacional) e o objeto (pessoas e matérias de sua competência) da jurisdição do TCU.<br><br><strong>Dispositivo Legal:</strong><br>Art. 4º O Tribunal de Contas da União tem jurisdição própria e privativa, em todo o território nacional, sobre as pessoas e matérias sujeitas à sua competência."
+            },
+            {
+                question: "O Tribunal de Contas da União tem jurisdição concorrente com o Poder Judiciário, em todo o território nacional, sobre as pessoas e matérias sujeitas à sua competência.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na classificação da jurisdição do TCU como \"concorrente\". O Art. 4º estabelece expressamente que sua jurisdição é \"própria e privativa\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 4º O Tribunal de Contas da União tem jurisdição própria e privativa, em todo o território nacional, sobre as pessoas e matérias sujeitas à sua competência."
+            },
+            {
+                question: "A jurisdição do Tribunal de Contas da União é própria e privativa, limitando-se, contudo, ao Distrito Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta, pois restringe indevidamente o alcance territorial da jurisdição do Tribunal. O Art. 4º é claro ao afirmar que a jurisdição se estende por \"todo o território nacional\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 4º O Tribunal de Contas da União tem jurisdição própria e privativa, em todo o território nacional, sobre as pessoas e matérias sujeitas à sua competência."
+            },
+            {
+                question: "A jurisdição do Tribunal de Contas da União abrange qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos ou pelos quais a União responda.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz com fidelidade o conteúdo do inciso I do Art. 5º, que define de forma ampla os sujeitos à jurisdição do TCU com base na gestão de recursos públicos.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: I – qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos ou pelos quais a União responda, ou que, em nome desta, assuma obrigações de natureza pecuniária;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange apenas as pessoas jurídicas de direito público que gerenciem ou administrem dinheiros, bens e valores públicos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o alcance da jurisdição do TCU. O erro está na expressão \"apenas as pessoas jurídicas de direito público\". O inciso I é claro ao incluir \"qualquer pessoa física ou jurídica, pública ou privada\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: I – qualquer pessoa física ou jurídica, pública ou privada, que utilize, arrecade, guarde, gerencie ou administre dinheiros, bens e valores públicos..."
+            },
+            {
+                question: "A jurisdição do TCU alcança qualquer pessoa que, em nome da União, assuma obrigações de natureza pecuniária.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e corresponde à parte final do inciso I do Art. 5º, que estende a jurisdição do Tribunal àqueles que contraem obrigações financeiras em nome da União.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: I – [...] ou que, em nome desta, assuma obrigações de natureza pecuniária;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange aqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso II do Art. 5º, que submete à jurisdição do TCU qualquer pessoa que cause prejuízo aos cofres públicos.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: II – aqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange apenas aqueles que, com dolo, derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por adicionar um requisito não previsto na norma. O inciso II não exige a presença de dolo (intenção) para que o responsável seja submetido à jurisdição do TCU, bastando que tenha dado causa ao dano, o que inclui a culpa.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: II – aqueles que derem causa a perda, extravio ou outra irregularidade de que resulte dano ao erário;"
+            },
+            {
+                question: "A jurisdição do TCU abrange os dirigentes de empresas públicas e sociedades de economia mista constituídas com recursos da União.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e descreve com exatidão o conteúdo do inciso III do Art. 5º, que especifica a responsabilização dos gestores de certas entidades da administração indireta.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: III – os dirigentes de empresas públicas e sociedades de economia mista constituídas com recursos da União;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange todos os empregados de empresas públicas e sociedades de economia mista constituídas com recursos da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar indevidamente o escopo da norma. O inciso III refere-se especificamente aos \"dirigentes\" dessas entidades, e não a \"todos os empregados\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: III – os dirigentes de empresas públicas e sociedades de economia mista constituídas com recursos da União;"
+            },
+            {
+                question: "A jurisdição do Tribunal alcança os dirigentes ou liquidantes das empresas encampadas ou sob intervenção.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e corresponde à primeira parte do inciso IV do Art. 5º, que trata da responsabilidade de gestores em situações especiais de administração empresarial pelo poder público.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: IV – os dirigentes ou liquidantes das empresas encampadas ou sob intervenção ou que, de qualquer modo, venham a integrar, provisória ou permanentemente, o patrimônio da União ou de outra entidade federal;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange os dirigentes das empresas que, de qualquer modo, venham a integrar, apenas permanentemente, o patrimônio da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na palavra \"apenas\". O inciso IV estabelece que a jurisdição abrange empresas que integrem o patrimônio da União de forma \"provisória ou permanentemente\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: IV – [...] ou que, de qualquer modo, venham a integrar, provisória ou permanentemente, o patrimônio da União ou de outra entidade federal;"
+            },
+            {
+                question: "Estão sujeitos à jurisdição do TCU os dirigentes ou liquidantes de empresas que venham a integrar o patrimônio da União ou de outra entidade federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete fielmente a parte final do inciso IV do Art. 5º, que estende a jurisdição do TCU aos gestores de entidades que passem a compor o patrimônio público federal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: IV – [...] ou que, de qualquer modo, venham a integrar, provisória ou permanentemente, o patrimônio da União ou de outra entidade federal;"
+            },
+            {
+                question: "Os responsáveis pelas contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, estão sujeitos à jurisdição do TCU.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso V do Art. 5º, que trata da fiscalização de entidades internacionais com participação societária da União.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: V – os responsáveis pelas contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo;"
+            },
+            {
+                question: "A jurisdição do TCU sobre empresas supranacionais alcança os responsáveis por suas contas, desde que a União participe de seu capital social apenas de forma direta.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na restrição \"apenas de forma direta\". O inciso V é claro ao estipular que a participação da União pode ser \"de forma direta ou indireta\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: V – os responsáveis pelas contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo;"
+            },
+            {
+                question: "A jurisdição do TCU sobre empresas supranacionais se dá nos termos do tratado constitutivo da respectiva empresa.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete a condição final imposta pelo inciso V do Art. 5º, que determina que a fiscalização deve observar o que foi estabelecido no ato de criação da empresa supranacional.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: V – os responsáveis pelas contas nacionais das empresas supranacionais de cujo capital social a União participe, de forma direta ou indireta, nos termos do tratado constitutivo;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange os responsáveis pelas contas internacionais das empresas supranacionais de cujo capital a União participe.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca da palavra \"nacionais\" por \"internacionais\". O inciso V especifica que a jurisdição do TCU é sobre as \"contas nacionais\" dessas empresas, ou seja, a parcela de suas operações relacionada ao Brasil.<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: V – os responsáveis pelas contas nacionais das empresas supranacionais..."
+            },
+            {
+                question: "A jurisdição do Tribunal abrange os dirigentes de empresas públicas e sociedades de economia mista, independentemente da origem dos recursos de sua constituição.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por omitir uma condição essencial. O inciso III do Art. 5º especifica que a jurisdição se aplica aos dirigentes de empresas públicas e sociedades de economia mista \"constituídas com recursos da União\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 5º A jurisdição do Tribunal abrange: III – os dirigentes de empresas públicas e sociedades de economia mista constituídas com recursos da União;"
+            },
+            {
+                question: "A jurisdição do Tribunal de Contas da União abrange os responsáveis por entidades dotadas de personalidade jurídica de direito privado que recebam contribuições parafiscais e prestem serviço de interesse público ou social.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso VI do Art. 5º, que inclui na jurisdição do TCU os gestores de entidades privadas que administram recursos parafiscais e atuam em áreas de interesse coletivo (o chamado \"Sistema S\").<br><br><strong>Dispositivo Legal:</strong><br>VI – os responsáveis por entidades dotadas de personalidade jurídica de direito privado que recebam contribuições parafiscais e prestem serviço de interesse público ou social;"
+            },
+            {
+                question: "A jurisdição do Tribunal de Contas da União abrange os responsáveis por entidades dotadas de personalidade jurídica de direito público que recebam contribuições parafiscais e prestem serviço de interesse público ou social.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na natureza da personalidade jurídica da entidade. O dispositivo legal especifica que a jurisdição abrange as entidades de \"direito privado\", e não de \"direito público\".<br><br><strong>Dispositivo Legal:</strong><br>VI – os responsáveis por entidades dotadas de personalidade jurídica de direito privado que recebam contribuições parafiscais e prestem serviço de interesse público ou social;"
+            },
+            {
+                question: "A jurisdição do TCU abrange os responsáveis por qualquer entidade de direito privado, independentemente do recebimento de contribuições parafiscais, desde que prestem serviço de interesse público ou social.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por omitir um requisito essencial. O inciso VI condiciona a jurisdição do TCU ao fato de a entidade privada não apenas prestar serviço de interesse público, mas também \"receber contribuições parafiscais\".<br><br><strong>Dispositivo Legal:</strong><br>VI – os responsáveis por entidades dotadas de personalidade jurídica de direito privado que recebam contribuições parafiscais e prestem serviço de interesse público ou social;"
+            },
+            {
+                question: "A jurisdição do TCU abrange todos aqueles que lhe devam prestar contas ou cujos atos estejam sujeitos à sua fiscalização por expressa disposição de lei.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente ao texto do inciso VII do Art. 5º, que estabelece uma cláusula geral de submissão à jurisdição do Tribunal para todos que tenham o dever legal de prestar contas à Corte.<br><br><strong>Dispositivo Legal:</strong><br>VII – todos aqueles que lhe devam prestar contas ou cujos atos estejam sujeitos à sua fiscalização por expressa disposição de lei;"
+            },
+            {
+                question: "A jurisdição do TCU abrange todos aqueles que lhe devam prestar contas, mesmo que não haja expressa disposição de lei nesse sentido.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em ignorar a condição final do dispositivo. O inciso VII é claro ao exigir que a sujeição à fiscalização do Tribunal decorra de \"expressa disposição de lei\".<br><br><strong>Dispositivo Legal:</strong><br>VII – todos aqueles que lhe devam prestar contas ou cujos atos estejam sujeitos à sua fiscalização por expressa disposição de lei;"
+            },
+            {
+                question: "Estão sob a jurisdição do TCU os responsáveis pela aplicação de quaisquer recursos repassados pela União, mediante convênio, acordo, ajuste ou outros instrumentos congêneres, a estado, ao Distrito Federal ou a município.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, embora parcial. Ela descreve com precisão uma parte importante da competência do Tribunal para fiscalizar a aplicação de recursos transferidos a outros entes federativos, conforme o inciso VIII.<br><br><strong>Dispositivo Legal:</strong><br>VIII – os responsáveis pela aplicação de quaisquer recursos repassados pela União, mediante convênio, acordo, ajuste ou outros instrumentos congêneres, a estado, ao Distrito Federal, a município, e a qualquer outra pessoa, física ou jurídica, pública ou privada;"
+            },
+            {
+                question: "A jurisdição do TCU para fiscalizar a aplicação de recursos repassados pela União abrange apenas aqueles destinados a estado, ao Distrito Federal e a município, excluindo-se pessoas físicas ou jurídicas de direito privado.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na exclusão de outros possíveis destinatários dos recursos. O texto do inciso VIII é explícito ao estender a jurisdição a \"qualquer outra pessoa, física ou jurídica, pública ou privada\".<br><br><strong>Dispositivo Legal:</strong><br>VIII – os responsáveis pela aplicação de quaisquer recursos repassados pela União, [...] a estado, ao Distrito Federal, a município, e a qualquer outra pessoa, física ou jurídica, pública ou privada;"
+            },
+            {
+                question: "A jurisdição do TCU abrange os sucessores dos administradores e responsáveis, até o limite do valor do patrimônio transferido.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a regra de responsabilidade patrimonial dos sucessores, que respondem pelas dívidas deixadas pelo administrador falecido, mas limitados ao valor da herança recebida, conforme o inciso IX.<br><br><strong>Dispositivo Legal:</strong><br>IX – os sucessores dos administradores e responsáveis a que se refere este artigo, até o limite do valor do patrimônio transferido, nos termos do inciso XLV do art. 5º da Constituição Federal;"
+            },
+            {
+                question: "A jurisdição do TCU abrange os sucessores dos administradores e responsáveis, que responderão integralmente pelos débitos, independentemente do valor do patrimônio transferido.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro crucial é a afirmação de que a responsabilidade é integral. O inciso IX, em harmonia com a Constituição Federal, limita a responsabilidade do sucessor \"até o limite do valor do patrimônio transferido\".<br><br><strong>Dispositivo Legal:</strong><br>IX – os sucessores dos administradores e responsáveis a que se refere este artigo, até o limite do valor do patrimônio transferido, nos termos do inciso XLV do art. 5º da Constituição Federal;"
+            },
+            {
+                question: "A jurisdição do Tribunal abrange apenas os administradores e responsáveis diretos, não alcançando seus sucessores.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O inciso IX estabelece expressamente que a jurisdição do Tribunal se estende aos \"sucessores dos administradores e responsáveis\", justamente para garantir o ressarcimento ao erário.<br><br><strong>Dispositivo Legal:</strong><br>IX – os sucessores dos administradores e responsáveis a que se refere este artigo, até o limite do valor do patrimônio transferido..."
+            },
+            {
+                question: "A jurisdição do TCU abrange os representantes da União na assembleia geral das empresas estatais, solidariamente com os membros dos conselhos fiscal e de administração, pela prática de atos de gestão ruinosa.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com precisão os sujeitos responsáveis (representantes da União, conselheiros fiscais e de administração), a natureza da responsabilidade (solidária) e um dos atos ilícitos (gestão ruinosa) previstos no inciso X.<br><br><strong>Dispositivo Legal:</strong><br>X – os representantes da União ou do poder público federal na assembleia geral das empresas estatais e sociedades anônimas de cujo capital as referidas pessoas jurídicas participem, solidariamente com os membros dos conselhos fiscal e de administração, pela prática de atos de gestão ruinosa ou liberalidade à custa das respectivas sociedades."
+            },
+            {
+                question: "A jurisdição do TCU abrange os representantes do poder público federal na assembleia geral das empresas estatais, que respondem subsidiariamente com os membros dos conselhos fiscal e de administração por atos de gestão ruinosa.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na natureza da responsabilidade. O inciso X estabelece que a responsabilidade é \"solidariamente\", o que significa que o TCU pode cobrar a dívida de qualquer um dos responsáveis, e não \"subsidiariamente\", que exigiria uma ordem de cobrança.<br><br><strong>Dispositivo Legal:</strong><br>X – [...] solidariamente com os membros dos conselhos fiscal e de administração, pela prática de atos de gestão ruinosa..."
+            },
+            {
+                question: "A jurisdição do TCU abrange os representantes da União e os membros do conselho de administração, excluindo os membros do conselho fiscal, pela prática de liberalidade à custa das respectivas sociedades.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao excluir um dos responsáveis. O inciso X inclui expressamente na responsabilidade solidária \"os membros dos conselhos fiscal e de administração\".<br><br><strong>Dispositivo Legal:</strong><br>X – [...] solidariamente com os membros dos conselhos fiscal e de administração, pela prática de atos de gestão ruinosa ou liberalidade à custa das respectivas sociedades."
+            },
+            {
+                question: "Estão sob a jurisdição do TCU os representantes da União na assembleia geral das empresas estatais e sociedades anônimas de cujo capital a União participe.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e, embora não detalhe toda a regra de responsabilidade, descreve de forma fiel um dos grupos de pessoas sujeitas à jurisdição do Tribunal conforme o inciso X.<br><br><strong>Dispositivo Legal:</strong><br>X – os representantes da União ou do poder público federal na assembleia geral das empresas estatais e sociedades anônimas de cujo capital as referidas pessoas jurídicas participem..."
+            },
+            {
+                question: "A responsabilidade dos representantes da União e dos conselheiros perante o TCU, prevista no inciso X, decorre de qualquer ato de gestão, mesmo que não seja ruinoso ou caracterizado como liberalidade.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por generalizar a conduta que gera responsabilidade. O inciso X especifica as condutas ilícitas, que são a \"prática de atos de gestão ruinosa ou liberalidade à custa das respectivas sociedades\".<br><br><strong>Dispositivo Legal:</strong><br>X – [...] pela prática de atos de gestão ruinosa ou liberalidade à custa das respectivas sociedades."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
