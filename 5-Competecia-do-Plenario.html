@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competência do Plenário</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Competência do Plenário</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Compete privativamente ao Plenário, dirigido pelo Presidente do Tribunal, deliberar sobre as matérias de sua competência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois resume de forma fiel o conteúdo do caput do Art. 15, que estabelece a competência privativa do Plenário e a direção de seus trabalhos pelo Presidente do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário, dirigido pelo Presidente do Tribunal:"
+            },
+            {
+                question: "Compete concorrentemente ao Plenário e às Câmaras deliberar sobre as matérias de que trata o Art. 15.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside no termo \"concorrentemente\". O caput do Art. 15 é explícito ao determinar que a competência do Plenário para as matérias ali elencadas é \"privativamente\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário, dirigido pelo Presidente do Tribunal:"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar originariamente sobre o parecer prévio relativo às Contas do Presidente da República.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência originária do Plenário para emitir o parecer prévio sobre as contas do Chefe do Poder Executivo, conforme o Art. 15, I, 'a'.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: a) o parecer prévio relativo às Contas do Presidente da República;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar originariamente sobre o julgamento definitivo relativo às Contas do Presidente da República.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em substituir \"parecer prévio\" por \"julgamento definitivo\". A competência do Plenário do TCU é para emitir um parecer prévio; o julgamento político das contas do Presidente da República é competência do Congresso Nacional.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: a) o parecer prévio relativo às Contas do Presidente da República;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar originariamente sobre pedido de informação sobre matéria da competência do Tribunal que lhe seja endereçado pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a competência do Plenário para responder a pedidos de informação oriundos do Poder Legislativo Federal, nos termos do Art. 15, I, 'b'.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: b) pedido de informação ou solicitação sobre matéria da competência do Tribunal que lhe seja endereçado pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre pedido de informação que lhe seja endereçado pelo Poder Executivo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao alterar a origem da solicitação. O dispositivo legal (Art. 15, I, 'b') especifica que a deliberação do Plenário se dá sobre pedidos endereçados pelo \"Congresso Nacional, por qualquer de suas casas, ou por suas comissões\", e não pelo Poder Executivo.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: b) pedido de informação ou solicitação sobre matéria da competência do Tribunal que lhe seja endereçado pelo Congresso Nacional, por qualquer de suas casas, ou por suas comissões;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar originariamente sobre solicitação de pronunciamento formulada pela comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde literalmente à competência do Plenário para deliberar sobre solicitações da Comissão Mista de Orçamento, conforme previsto no Art. 15, I, 'c'.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: c) solicitação de pronunciamento formulada pela comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal, nos termos do § 1º do art. 72 da Constituição Federal;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar originariamente sobre solicitação de pronunciamento formulada por qualquer comissão técnica do Congresso Nacional.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por generalizar a origem da solicitação. A alínea 'c' do inciso I do Art. 15 é específica ao se referir à \"comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal\" (Comissão Mista de Orçamento), e não a \"qualquer comissão técnica\".<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: c) solicitação de pronunciamento formulada pela comissão mista permanente de senadores e deputados referida no § 1º do art. 166 da Constituição Federal..."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre incidente de uniformização de jurisprudência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete de maneira sucinta e precisa a competência do Plenário para decidir sobre incidentes que visam pacificar o entendimento do Tribunal, conforme o Art. 15, I, 'd'.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: d) incidente de uniformização de jurisprudência, na forma do art. 91;"
+            },
+            {
+                question: "Compete às Câmaras, de forma isolada, deliberar sobre incidente de uniformização de jurisprudência.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A competência para deliberar sobre o incidente de uniformização de jurisprudência, que busca unificar o entendimento de todo o Tribunal, é do Plenário, e não das Câmaras, conforme o Art. 15, I, 'd'.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: d) incidente de uniformização de jurisprudência, na forma do art. 91;"
+            },
+            {
+                question: "É competência originária do Plenário deliberar sobre o incidente de desconsideração da personalidade jurídica.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em trocar o tipo de incidente. A alínea 'd' do inciso I do Art. 15 refere-se expressamente ao \"incidente de uniformização de jurisprudência\", e não ao de desconsideração da personalidade jurídica.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: d) incidente de uniformização de jurisprudência, na forma do art. 91;"
+            },
+            {
+                question: "Compete ao Plenário deliberar originariamente sobre conflito de lei ou de ato normativo do poder público com a Constituição Federal, em matéria da competência do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição fiel da competência do Plenário para realizar o controle de constitucionalidade de forma incidental nos processos sob sua jurisdição, nos termos do Art. 15, I, 'e'.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: e) conflito de lei ou de ato normativo do poder público com a Constituição Federal, em matéria da competência do Tribunal;"
+            },
+            {
+                question: "Compete ao Plenário declarar, em caráter definitivo e com efeito vinculante, a inconstitucionalidade de lei ou de ato normativo do poder público.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em atribuir ao TCU poderes de controle concentrado de constitucionalidade, que são do STF. O Plenário do TCU apenas \"delibera sobre o conflito\" para deixar de aplicar a norma no caso concreto (controle difuso), não possuindo competência para declarar a inconstitucionalidade com efeitos gerais.<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: e) conflito de lei ou de ato normativo do poder público com a Constituição Federal, em matéria da competência do Tribunal;"
+            },
+            {
+                question: "A deliberação do Plenário sobre conflito de lei com a Constituição Federal pode ocorrer em qualquer matéria, mesmo que estranha à competência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar o escopo da atuação do TCU. A parte final da alínea 'e' do inciso I do Art. 15 restringe essa deliberação à \"matéria da competência do Tribunal\".<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: e) conflito de lei ou de ato normativo do poder público com a Constituição Federal, em matéria da competência do Tribunal;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre conflito de ato normativo do poder público com lei federal, em matéria de competência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em trocar o parâmetro de controle. A alínea 'e' trata do conflito de uma norma com a \"Constituição Federal\" (controle de constitucionalidade), e não do conflito de um ato normativo com uma \"lei federal\" (controle de legalidade).<br><br><strong>Dispositivo Legal:</strong><br>I – deliberar originariamente sobre: e) conflito de lei ou de ato normativo do poder público com a Constituição Federal, em matéria da competência do Tribunal;"
+            },
+            {
+                question: "Compete privativamente ao Plenário a fixação dos coeficientes destinados ao cálculo das parcelas a serem entregues aos estados, Distrito Federal e municípios, à conta dos recursos do Fundo de Participação dos Estados e do Distrito Federal (FPE) e do Fundo de Participação dos Municípios (FPM).",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde fielmente à competência do Plenário para fixar os coeficientes dos fundos de participação, conforme descrito na alínea 'f' do inciso I do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>f) fixação dos coeficientes destinados ao cálculo das parcelas a serem entregues aos estados, Distrito Federal e municípios, à conta dos recursos do Fundo de Participação dos Estados e do Distrito Federal (FPE) e do Fundo de Participação dos Municípios (FPM), a que alude o parágrafo único do art. 161 da Constituição Federal, observados os critérios estabelecidos nas normas legais e regulamentares pertinentes;"
+            },
+            {
+                question: "Compete privativamente ao Plenário a fixação dos coeficientes destinados ao cálculo das parcelas do Fundo de Manutenção e Desenvolvimento da Educação Básica (FUNDEB).",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em substituir os fundos mencionados no dispositivo legal. A alínea 'f' refere-se especificamente ao Fundo de Participação dos Estados e do Distrito Federal (FPE) e ao Fundo de Participação dos Municípios (FPM), e não ao FUNDEB.<br><br><strong>Dispositivo Legal:</strong><br>f) fixação dos coeficientes destinados ao cálculo das parcelas a serem entregues aos estados, Distrito Federal e municípios, à conta dos recursos do Fundo de Participação dos Estados e do Distrito Federal (FPE) e do Fundo de Participação dos Municípios (FPM)..."
+            },
+            {
+                question: "A fixação dos coeficientes do FPE e do FPM deve ser feita pelo Plenário, independentemente dos critérios estabelecidos nas normas legais e regulamentares pertinentes.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao remover uma condição essencial para o ato. A parte final da alínea 'f' determina que a fixação dos coeficientes deve ocorrer com a observância dos \"critérios estabelecidos nas normas legais e regulamentares pertinentes\".<br><br><strong>Dispositivo Legal:</strong><br>f) [...] observados os critérios estabelecidos nas normas legais e regulamentares pertinentes;"
+            },
+            {
+                question: "Compete privativamente ao Plenário a fixação dos coeficientes destinados ao cálculo das parcelas que deverão ser entregues aos estados e ao Distrito Federal, sobre o produto da arrecadação do imposto sobre produtos industrializados.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição precisa da competência do Plenário para fixar os coeficientes de distribuição de parte da arrecadação do IPI, nos termos da alínea 'g'.<br><br><strong>Dispositivo Legal:</strong><br>g) fixação dos coeficientes destinados ao cálculo das parcelas que deverão ser entregues aos estados e ao Distrito Federal, sobre o produto da arrecadação do imposto sobre produtos industrializados, de que trata o inciso II do art. 159 da Constituição Federal, observados os critérios estabelecidos nas normas legais e regulamentares pertinentes;"
+            },
+            {
+                question: "Compete privativamente ao Plenário a fixação dos coeficientes para a entrega de parcelas do imposto de renda aos estados e ao Distrito Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca do tributo. A alínea 'g' refere-se ao \"imposto sobre produtos industrializados\" (IPI), e não ao \"imposto de renda\".<br><br><strong>Dispositivo Legal:</strong><br>g) fixação dos coeficientes destinados ao cálculo das parcelas que deverão ser entregues aos estados e ao Distrito Federal, sobre o produto da arrecadação do imposto sobre produtos industrializados..."
+            },
+            {
+                question: "A fixação dos coeficientes para entrega de parcelas do IPI, de competência do Plenário, abrange os estados, o Distrito Federal e os municípios.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por incluir um ente federativo não previsto no dispositivo. A alínea 'g' especifica que as parcelas são entregues \"aos estados e ao Distrito Federal\", não mencionando os municípios neste contexto.<br><br><strong>Dispositivo Legal:</strong><br>g) fixação dos coeficientes destinados ao cálculo das parcelas que deverão ser entregues aos estados e ao Distrito Federal..."
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre a contestação mencionada no art. 292.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência específica do Plenário mencionada na alínea 'h'.<br><br><strong>Dispositivo Legal:</strong><br>h) contestação mencionada no art. 292;"
+            },
+            {
+                question: "Compete privativamente às Câmaras deliberar sobre a contestação mencionada no art. 292.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em atribuir a competência às Câmaras. O caput do Art. 15 estabelece que as competências listadas em seus incisos e alíneas são \"privativamente do Plenário\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário... h) contestação mencionada no art. 292;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre a inabilitação de responsável e a inidoneidade de licitante.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente duas das sanções cuja aplicação é de competência privativa do Plenário, conforme o início da alínea 'i'.<br><br><strong>Dispositivo Legal:</strong><br>i) inabilitação de responsável e inidoneidade de licitante, nos termos dos arts. 270 e 271..."
+            },
+            {
+                question: "É de competência privativa do Plenário deliberar sobre a inidoneidade de responsável e a inabilitação de licitante.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na inversão das sanções. A alínea 'i' estabelece a competência para deliberar sobre a \"inabilitação de responsável\" (para o exercício de cargo em comissão ou função de confiança) e a \"inidoneidade de licitante\" (para participar de licitação).<br><br><strong>Dispositivo Legal:</strong><br>i) inabilitação de responsável e inidoneidade de licitante, nos termos dos arts. 270 e 271..."
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre a adoção das medidas cautelares previstas nos arts. 273 a 276.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete a regra geral de que a adoção de medidas cautelares é uma deliberação de competência do Plenário, de acordo com o que dispõe a alínea 'i'.<br><br><strong>Dispositivo Legal:</strong><br>i) [...] e adoção das medidas cautelares previstas nos arts. 273 a 276..."
+            },
+            {
+                question: "É vedada a antecipação de medida cautelar pelo relator ou pelo Presidente, devendo a matéria ser sempre submetida ao Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em proibir uma faculdade expressamente prevista. A parte final da alínea 'i' cria uma exceção à regra, \"resguardada, no caso do último artigo, a possibilidade de antecipação da medida pelo relator ou pelo Presidente\".<br><br><strong>Dispositivo Legal:</strong><br>i) [...] resguardada, no caso do último artigo, a possibilidade de antecipação da medida pelo relator ou pelo Presidente;"
+            },
+            {
+                question: "A possibilidade de antecipação de medida cautelar pelo relator ou pelo Presidente é resguardada nos casos previstos no art. 276.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois especifica com precisão a hipótese em que a medida cautelar pode ser antecipada monocraticamente, que é aquela \"no caso do último artigo\" (referindo-se ao art. 276, que é o último do intervalo mencionado de 273 a 276), conforme a ressalva da alínea 'i'.<br><br><strong>Dispositivo Legal:</strong><br>i) [...] e adoção das medidas cautelares previstas nos arts. 273 a 276, resguardada, no caso do último artigo, a possibilidade de antecipação da medida pelo relator ou pelo Presidente;"
+            },
+            {
+                question: "A adoção de medidas cautelares é competência privativa do relator, devendo ser referendada pelo Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em inverter a regra com a exceção. A regra geral, segundo a alínea 'i', é que a adoção das medidas é de competência do Plenário. A atuação do relator ou do Presidente é excepcional e se dá por antecipação em casos específicos.<br><br><strong>Dispositivo Legal:</strong><br>i) [...] e adoção das medidas cautelares previstas nos arts. 273 a 276, resguardada, no caso do último artigo, a possibilidade de antecipação da medida pelo relator ou pelo Presidente;"
+            },
+            {
+                question: "Compete privativamente ao Plenário a adoção das medidas cautelares, sendo permitida a antecipação da medida apenas pelo Presidente do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir a possibilidade de antecipação da medida. A parte final da alínea 'i' autoriza a antecipação tanto \"pelo relator\" quanto \"pelo Presidente\".<br><br><strong>Dispositivo Legal:</strong><br>i) [...] resguardada, no caso do último artigo, a possibilidade de antecipação da medida pelo relator ou pelo Presidente;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre a realização de fiscalizações em unidades do Poder Legislativo, do Supremo Tribunal Federal e da Presidência da República.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois elenca órgãos e Poderes cuja fiscalização é de competência originária e privativa do Plenário, conforme o início da alínea 'j' do inciso I do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>j) realização de fiscalizações em unidades do Poder Legislativo, do Supremo Tribunal Federal, dos Tribunais Superiores, da Presidência da República, do Tribunal de Contas da União, do Conselho Nacional de Justiça, do Conselho Nacional do Ministério Público, bem como do Ministério Público da União e da Advocacia‑Geral da União;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre a realização de fiscalizações no Tribunal de Contas da União, no Conselho Nacional de Justiça e no Conselho Nacional do Ministério Público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois lista corretamente órgãos de cúpula cuja fiscalização é de competência privativa do Plenário do próprio TCU, de acordo com o previsto na alínea 'j'.<br><br><strong>Dispositivo Legal:</strong><br>j) realização de fiscalizações em unidades [...] do Tribunal de Contas da União, do Conselho Nacional de Justiça, do Conselho Nacional do Ministério Público..."
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre a realização de fiscalizações em todas as unidades do Poder Judiciário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao generalizar a competência. A alínea 'j' especifica a competência do Plenário para fiscalizar o \"Supremo Tribunal Federal\", os \"Tribunais Superiores\" e o \"Conselho Nacional de Justiça\", não abrangendo todas as unidades do Judiciário, como as de primeira instância.<br><br><strong>Dispositivo Legal:</strong><br>j) realização de fiscalizações em unidades [...] do Supremo Tribunal Federal, dos Tribunais Superiores, [...] do Conselho Nacional de Justiça..."
+            },
+            {
+                question: "A deliberação sobre a realização de fiscalizações no Ministério Público da União e na Advocacia-Geral da União é de competência privativa do Plenário.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à parte final da alínea 'j', que atribui ao Plenário a competência para deliberar sobre a fiscalização nessas Funções Essenciais à Justiça.<br><br><strong>Dispositivo Legal:</strong><br>j) realização de fiscalizações em unidades [...] do Ministério Público da União e da Advocacia‑Geral da União;"
+            },
+            {
+                question: "É competência privativa do Plenário deliberar sobre representação de equipe de fiscalização prevista no art. 246.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Plenário prevista na alínea 'l' do inciso I do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>l) representação de equipe de fiscalização prevista no art. 246;"
+            },
+            {
+                question: "É competência das Câmaras deliberar sobre representação de equipe de fiscalização prevista no art. 246.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em atribuir a competência às Câmaras. O caput do Art. 15, combinado com a alínea 'l', deixa claro que tal competência é \"privativamente ao Plenário\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário... l) representação de equipe de fiscalização prevista no art. 246;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre relatório de auditoria operacional.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz com exatidão a competência do Plenário para apreciar relatórios de auditoria operacional, conforme a alínea 'm'.<br><br><strong>Dispositivo Legal:</strong><br>m) relatório de auditoria operacional;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre relatório de auditoria contábil.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar o tipo de auditoria. A alínea 'm' especifica a competência do Plenário para deliberar sobre relatórios de auditoria \"operacional\", e não \"contábil\".<br><br><strong>Dispositivo Legal:</strong><br>m) relatório de auditoria operacional;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre relatório de fiscalização realizada em virtude de solicitação do Congresso Nacional, de suas casas e das respectivas comissões.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Plenário para deliberar sobre os relatórios de fiscalizações solicitadas pelo Poder Legislativo, nos termos da alínea 'n'.<br><br><strong>Dispositivo Legal:</strong><br>n) relatório de fiscalização realizada em virtude de solicitação do Congresso Nacional, de suas casas e das respectivas comissões..."
+            },
+            {
+                question: "É competência do Plenário deliberar sobre relatório de fiscalização autorizada nos termos da alínea “j” do inciso I do art. 15.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete a parte final da alínea 'n', que atribui ao Plenário a competência para apreciar os relatórios das fiscalizações que ele mesmo autorizou nos órgãos de cúpula listados na alínea 'j'.<br><br><strong>Dispositivo Legal:</strong><br>n) [...] bem como daquela autorizada nos termos da alínea “j” do inciso I do art. 15;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre todos os relatórios de fiscalização realizados pelo Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por generalizar. A alínea 'n' especifica que a competência do Plenário é para relatórios de fiscalizações solicitadas pelo Congresso ou aquelas autorizadas com base na alínea 'j'. Outros relatórios podem ser de competência das Câmaras.<br><br><strong>Dispositivo Legal:</strong><br>n) relatório de fiscalização realizada em virtude de solicitação do Congresso Nacional [...] bem como daquela autorizada nos termos da alínea “j” do inciso I do art. 15;"
+            },
+            {
+                question: "É competência privativa do Plenário deliberar sobre consulta sobre matéria da competência do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Plenário para responder a consultas, conforme a alínea 'o'.<br><br><strong>Dispositivo Legal:</strong><br>o) consulta sobre matéria da competência do Tribunal;"
+            },
+            {
+                question: "É competência privativa das Câmaras deliberar sobre consulta sobre matéria da competência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A competência para responder a consultas, por sua natureza de uniformização de entendimento, é atribuída \"privativamente ao Plenário\" pelo Art. 15, e não às Câmaras.<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário... o) consulta sobre matéria da competência do Tribunal;"
+            },
+            {
+                question: "É competência privativa do Plenário deliberar sobre denúncia.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente ao texto da alínea 'p', que atribui ao Plenário a competência para deliberar sobre denúncias.<br><br><strong>Dispositivo Legal:</strong><br>p) denúncia;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre matéria regimental ou de caráter normativo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a competência do Plenário para deliberar sobre assuntos internos de regulamentação e normatização, conforme a alínea 'q'.<br><br><strong>Dispositivo Legal:</strong><br>q) matéria regimental ou de caráter normativo;"
+            },
+            {
+                question: "A deliberação sobre matéria de caráter exclusivamente normativo é de competência das Câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A competência para deliberar sobre matéria de caráter normativo, por sua abrangência, é do Plenário, e não das Câmaras, conforme a alínea 'q' do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário... q) matéria regimental ou de caráter normativo;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre conflito de competência entre relatores.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Plenário para dirimir conflitos de competência entre os ministros relatores, conforme a alínea 'r'.<br><br><strong>Dispositivo Legal:</strong><br>r) conflito de competência entre relatores;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre conflito de atribuições entre as Câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em trocar o objeto do conflito. A alínea 'r' refere-se a conflito de competência \"entre relatores\", e não \"entre as Câmaras\".<br><br><strong>Dispositivo Legal:</strong><br>r) conflito de competência entre relatores;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre qualquer assunto não incluído expressamente na competência das câmaras.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve a competência residual do Plenário, que é responsável por deliberar sobre todas as matérias que não sejam de atribuição específica das Câmaras, nos termos da alínea 's'.<br><br><strong>Dispositivo Legal:</strong><br>s) qualquer assunto não incluído expressamente na competência das câmaras;"
+            },
+            {
+                question: "Compete às Câmaras deliberar sobre qualquer assunto não incluído expressamente na competência do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em inverter a regra da competência residual. A alínea 's' estabelece que o Plenário detém a competência residual, e não as Câmaras.<br><br><strong>Dispositivo Legal:</strong><br>s) qualquer assunto não incluído expressamente na competência das câmaras;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre os recursos de reconsideração e os embargos de declaração apresentados contra suas próprias decisões.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Plenário para julgar os recursos de reconsideração e os embargos de declaração opostos a seus próprios acórdãos, conforme o início do inciso II do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>II – deliberar sobre os recursos de reconsideração, os embargos de declaração e os pedidos de reexame apresentados contra suas próprias decisões, bem como os agravos interpostos a despachos decisórios proferidos em processos de sua competência;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre os recursos de reconsideração apresentados contra as decisões das Câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na origem da decisão recorrida. O inciso II do Art. 15 estabelece que a competência do Plenário é para julgar recursos contra \"suas próprias decisões\", e não contra as decisões das Câmaras.<br><br><strong>Dispositivo Legal:</strong><br>II – deliberar sobre os recursos de reconsideração, os embargos de declaração e os pedidos de reexame apresentados contra suas próprias decisões..."
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre os pedidos de reexame apresentados contra suas próprias decisões.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à competência do Plenário para apreciar pedidos de reexame interpostos contra suas deliberações, nos termos do inciso II do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>II – deliberar sobre os recursos de reconsideração, os embargos de declaração e os pedidos de reexame apresentados contra suas próprias decisões..."
+            },
+            {
+                question: "É de competência do Plenário deliberar sobre os agravos interpostos a despachos decisórios proferidos em processos de sua competência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e descreve com precisão a competência do Plenário para julgar agravos contra decisões monocráticas proferidas no âmbito de processos plenários, conforme a parte final do inciso II do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>II – [...] bem como os agravos interpostos a despachos decisórios proferidos em processos de sua competência;"
+            },
+            {
+                question: "É de competência das Câmaras deliberar sobre os agravos interpostos a despachos decisórios proferidos em processos de competência do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em atribuir a competência às Câmaras. O inciso II do Art. 15 é claro ao determinar que o Plenário julga os agravos em processos \"de sua competência\".<br><br><strong>Dispositivo Legal:</strong><br>II – [...] bem como os agravos interpostos a despachos decisórios proferidos em processos de sua competência;"
+            },
+            {
+                question: "Compete privativamente ao Plenário deliberar sobre recursos de revisão.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso III do Art. 15, que atribui ao Plenário a competência para julgar a ação rescisória do controle externo, que é o recurso de revisão.<br><br><strong>Dispositivo Legal:</strong><br>III – deliberar sobre recursos de revisão;"
+            },
+            {
+                question: "Compete privativamente às Câmaras deliberar sobre recursos de revisão.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A competência para deliberar sobre o recurso de revisão, por sua natureza excepcional, é atribuída \"privativamente ao Plenário\" pelo Art. 15, inciso III, e não às Câmaras.<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário... III – deliberar sobre recursos de revisão;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre os recursos contra decisões adotadas pelo Presidente sobre matéria administrativa.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a competência recursal do Plenário em face das decisões do Presidente em matéria administrativa, conforme o inciso IV do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>IV – deliberar sobre os recursos contra decisões adotadas pelo Presidente sobre matéria administrativa;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre os recursos contra decisões adotadas pelo Presidente sobre matéria processual.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar a natureza da matéria. O inciso IV do Art. 15 refere-se a recursos contra decisões do Presidente sobre \"matéria administrativa\", e não \"processual\".<br><br><strong>Dispositivo Legal:</strong><br>IV – deliberar sobre os recursos contra decisões adotadas pelo Presidente sobre matéria administrativa;"
+            },
+            {
+                question: "Compete privativamente ao Plenário aprovar proposta de acordo de cooperação e instrumento congênere, nas situações em que houver transferência de recursos financeiros.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois transcreve literalmente a competência do Plenário para aprovar acordos que envolvam repasse de recursos financeiros, nos termos do inciso V do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>V – aprovar proposta de acordo de cooperação e instrumento congênere, nas situações em que houver transferência de recursos financeiros;"
+            },
+            {
+                question: "Compete privativamente ao Plenário aprovar proposta de acordo de cooperação, independentemente de haver transferência de recursos financeiros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em remover a condição prevista na norma. O inciso V do Art. 15 condiciona a competência do Plenário às situações \"em que houver transferência de recursos financeiros\".<br><br><strong>Dispositivo Legal:</strong><br>V – aprovar proposta de acordo de cooperação e instrumento congênere, nas situações em que houver transferência de recursos financeiros;"
+            },
+            {
+                question: "Compete privativamente ao Plenário aprovar o plano de controle externo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso VI do Art. 15, que trata da aprovação do principal instrumento de planejamento da atividade-fim do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>VI – aprovar o plano de controle externo;"
+            },
+            {
+                question: "Compete privativamente ao Presidente do Tribunal aprovar o plano de controle externo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao Presidente. O inciso VI do Art. 15 estabelece que a aprovação do plano de controle externo é uma deliberação do colegiado máximo, o Plenário.<br><br><strong>Dispositivo Legal:</strong><br>Art. 15. Compete privativamente ao Plenário... VI – aprovar o plano de controle externo;"
+            },
+            {
+                question: "Compete ao Plenário aprovar os enunciados da Súmula da Jurisprudência do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à competência do Plenário para consolidar e aprovar os entendimentos jurisprudenciais do Tribunal, conforme o inciso VII do Art. 15.<br><br><strong>Dispositivo Legal:</strong><br>VII – aprovar os enunciados da Súmula da Jurisprudência do Tribunal;"
+            },
+            {
+                question: "Compete ao Plenário propor os enunciados da Súmula da Jurisprudência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. A competência do Plenário, segundo o inciso VII, é de \"aprovar\" os enunciados, e não apenas de \"propor\".<br><br><strong>Dispositivo Legal:</strong><br>VII – aprovar os enunciados da Súmula da Jurisprudência do Tribunal;"
+            },
+            {
+                question: "Compete privativamente ao Plenário aprovar proposta relativa a projeto de lei que o Tribunal deva encaminhar ao Poder Legislativo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Plenário para deliberar internamente sobre as propostas legislativas de iniciativa do Tribunal, nos termos do inciso VIII.<br><br><strong>Dispositivo Legal:</strong><br>VIII – aprovar proposta relativa a projeto de lei que o Tribunal deva encaminhar ao Poder Legislativo;"
+            },
+            {
+                question: "Compete privativamente ao Plenário encaminhar diretamente ao Poder Legislativo os projetos de lei de iniciativa do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que o Plenário encaminha o projeto. A competência do Plenário, conforme o inciso VIII, é de \"aprovar a proposta\" relativa ao projeto de lei. O encaminhamento formal é um ato da Presidência do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>VIII – aprovar proposta relativa a projeto de lei que o Tribunal deva encaminhar ao Poder Legislativo;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre a lista tríplice dos ministros‑substitutos e dos membros do Ministério Público junto ao Tribunal, para preenchimento de cargo de ministro.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso IX, que trata do procedimento de escolha interna para a vaga de ministro destinada a membros da carreira do TCU.<br><br><strong>Dispositivo Legal:</strong><br>IX – deliberar sobre a lista tríplice dos ministros‑substitutos e dos membros do Ministério Público junto ao Tribunal, para preenchimento de cargo de ministro."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre a lista sêxtupla dos ministros‑substitutos para preenchimento de cargo de ministro.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na quantidade de nomes na lista. O inciso IX do Art. 15 especifica que a lista é \"tríplice\", e não \"sêxtupla\".<br><br><strong>Dispositivo Legal:</strong><br>IX – deliberar sobre a lista tríplice dos ministros‑substitutos e dos membros do Ministério Público junto ao Tribunal, para preenchimento de cargo de ministro."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre a lista tríplice para preenchimento de cargo de ministro, composta por ministros-substitutos, membros do Ministério Público e servidores de carreira do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao adicionar uma categoria não prevista no dispositivo. O inciso IX do Art. 15 estabelece que a lista tríplice é formada por \"ministros-substitutos e dos membros do Ministério Público junto ao Tribunal\", não incluindo \"servidores de carreira\".<br><br><strong>Dispositivo Legal:</strong><br>IX – deliberar sobre a lista tríplice dos ministros‑substitutos e dos membros do Ministério Público junto ao Tribunal, para preenchimento de cargo de ministro."
+            },
+            {
+                question: "Compete ao Plenário constituir comissões temporárias, sem prejuízo do disposto no inciso XLI do art. 28.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à competência do Plenário para criar comissões temporárias, ressalvando a competência da Presidência, conforme o inciso I do Art. 16.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: I – constituir comissões temporárias, sem prejuízo do disposto no inciso XLI do art. 28;"
+            },
+            {
+                question: "Compete ao Plenário constituir comissões permanentes e temporárias.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em incluir a constituição de comissões \"permanentes\" na competência do Plenário. O inciso I do Art. 16 refere-se especificamente à competência para constituir comissões \"temporárias\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: I – constituir comissões temporárias, sem prejuízo do disposto no inciso XLI do art. 28;"
+            },
+            {
+                question: "Compete ao Plenário apreciar questões administrativas de caráter relevante.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Plenário para deliberar sobre matérias administrativas que possuam relevância institucional, de acordo com o inciso II do Art. 16.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: II – apreciar questões administrativas de caráter relevante;"
+            },
+            {
+                question: "Compete ao Plenário apreciar todas as questões administrativas do Tribunal, independentemente de seu caráter.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao generalizar a competência. O inciso II do Art. 16 restringe a competência do Plenário às questões administrativas \"de caráter relevante\", e não a todas elas.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: II – apreciar questões administrativas de caráter relevante;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre processos por ele avocados em razão de sua relevância, por sugestão de ministro ou de ministro‑substituto convocado submetida ao colegiado.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente o procedimento de avocação de processos pelo Plenário, incluindo o motivo (relevância), os legitimados para sugerir (ministro ou ministro-substituto) e a necessidade de submissão ao colegiado, conforme o inciso III.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: III – deliberar sobre processos por ele avocados em razão de sua relevância, por sugestão de ministro ou de ministro‑substituto convocado submetida ao colegiado;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre processos por ele avocados em razão de sua urgência, por sugestão de qualquer membro do Ministério Público.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por dois motivos. Primeiro, o critério para a avocação é a \"relevância\" do processo, e não a \"urgência\". Segundo, a sugestão deve partir de \"ministro ou de ministro-substituto convocado\", e não de membro do Ministério Público.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: III – deliberar sobre processos por ele avocados em razão de sua relevância, por sugestão de ministro ou de ministro‑substituto convocado submetida ao colegiado;"
+            },
+            {
+                question: "O Presidente do Tribunal pode, monocraticamente, avocar processos de competência das Câmaras para o Plenário em razão de sua relevância.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no procedimento. O inciso III estabelece que a avocação é uma deliberação do Plenário (\"deliberar sobre processos por ele avocados\"), baseada em sugestão \"submetida ao colegiado\", não sendo um ato monocrático do Presidente.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: III – deliberar sobre processos por ele avocados em razão de sua relevância, por sugestão de ministro ou de ministro‑substituto convocado submetida ao colegiado;"
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre processos remetidos pelo relator ou pelas câmaras, exceto os de que trata o inciso VII do art. 17.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com precisão a competência do Plenário para julgar processos que lhe são encaminhados, com a ressalva expressa no texto legal, conforme o inciso IV.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: IV – deliberar sobre processos remetidos pelo relator ou pelas câmaras, nos termos do § 1º do art. 17 ou do art. 139, exceto os de que trata o inciso VII do art. 17."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre todos os processos remetidos pelo relator ou pelas câmaras, sem exceções.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em ignorar a ressalva contida na norma. O inciso IV expressamente exclui da competência do Plenário \"os [processos] de que trata o inciso VII do art. 17\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: IV – deliberar sobre processos remetidos pelo relator ou pelas câmaras, nos termos do § 1º do art. 17 ou do art. 139, exceto os de que trata o inciso VII do art. 17."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre propostas de fixação de entendimento de especial relevância para a Administração Pública, sobre questão de direito, que somente poderão ser aprovadas por 2/3 dos ministros.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência, o objeto e o quórum qualificado para a fixação de entendimentos de grande relevância, nos termos do inciso V.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: V – deliberar sobre propostas de fixação de entendimento de especial relevância para a Administração Pública, sobre questão de direito, que somente poderão ser aprovadas por 2/3 dos ministros, inclusive ministros‑substitutos convocados."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre propostas de fixação de entendimento, sobre questão de direito, que poderão ser aprovadas por maioria simples dos ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no quórum de aprovação. O inciso V exige um quórum qualificado de \"2/3 dos ministros\", e não de maioria simples.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: V – deliberar sobre propostas de fixação de entendimento de especial relevância para a Administração Pública, sobre questão de direito, que somente poderão ser aprovadas por 2/3 dos ministros, inclusive ministros‑substitutos convocados."
+            },
+            {
+                question: "O quórum de 2/3 dos ministros para aprovação de propostas de fixação de entendimento inclui os ministros-substitutos convocados.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete com exatidão a parte final do inciso V, que inclui expressamente os ministros-substitutos convocados na base de cálculo do quórum qualificado.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: V – [...] que somente poderão ser aprovadas por 2/3 dos ministros, inclusive ministros‑substitutos convocados."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre propostas de determinações de caráter normativo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à primeira competência elencada no inciso VI do Art. 16, que trata da expedição de determinações com força normativa pelo Plenário.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: VI – deliberar sobre propostas de determinações de caráter normativo, de estudos sobre procedimentos técnicos, bem como daqueles em que se entender necessário o exame incidental de inconstitucionalidade de lei ou de ato normativo do poder público."
+            },
+            {
+                question: "É de competência do Plenário deliberar sobre propostas de estudos sobre procedimentos técnicos.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Plenário para deliberar sobre a realização de estudos voltados ao aprimoramento de procedimentos técnicos, nos termos do inciso VI.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: VI – deliberar sobre propostas [...] de estudos sobre procedimentos técnicos..."
+            },
+            {
+                question: "Compete ao Plenário deliberar sobre propostas em que se entender necessário o exame incidental de inconstitucionalidade de lei ou de ato normativo do poder público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e é uma transcrição da parte final do inciso VI, que reafirma a competência do Plenário para realizar o controle difuso de constitucionalidade quando necessário para o deslinde de um caso concreto.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: VI – deliberar sobre propostas [...] em que se entender necessário o exame incidental de inconstitucionalidade de lei ou de ato normativo do poder público."
+            },
+            {
+                question: "Compete ao Plenário realizar o exame principal de inconstitucionalidade de lei ou de ato normativo do poder público.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em trocar \"incidental\" por \"principal\". O controle realizado pelo TCU é incidental, ou seja, ocorre como uma questão prévia dentro de um processo de sua competência. O controle principal (ou abstrato) é de competência do Supremo Tribunal Federal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 16. Compete ainda ao Plenário: VI – deliberar sobre propostas [...] em que se entender necessário o exame incidental de inconstitucionalidade de lei ou de ato normativo do poder público."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>

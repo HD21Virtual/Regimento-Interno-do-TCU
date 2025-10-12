@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composição das Câmaras</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Composição das Câmaras</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Cada câmara do Tribunal de Contas da União compõe‑se de quatro ministros, indicados pelo Presidente do Tribunal na primeira sessão ordinária de cada ano.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve de forma literal e precisa a composição numérica das câmaras, a autoridade responsável pela indicação dos membros (Presidente) e o momento em que isso ocorre (primeira sessão ordinária anual), conforme o Art. 11, caput.<br><br><strong>Dispositivo Legal:</strong><br>Art. 11. Cada câmara compõe‑se de quatro ministros, indicados pelo Presidente do Tribunal na primeira sessão ordinária de cada ano."
+            },
+            {
+                question: "Cada câmara do Tribunal de Contas da União compõe‑se de três ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside no número de ministros que compõem cada câmara. O Art. 11, caput, estabelece que a composição é de \"quatro ministros\", e não três.<br><br><strong>Dispositivo Legal:</strong><br>Art. 11. Cada câmara compõe‑se de quatro ministros, indicados pelo Presidente do Tribunal na primeira sessão ordinária de cada ano."
+            },
+            {
+                question: "Os ministros que compõem cada câmara são indicados pelo Plenário do Tribunal na primeira sessão ordinária de cada ano.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência da indicação ao Plenário. O Art. 11, caput, é claro ao definir que os ministros são \"indicados pelo Presidente do Tribunal\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 11. Cada câmara compõe‑se de quatro ministros, indicados pelo Presidente do Tribunal na primeira sessão ordinária de cada ano."
+            },
+            {
+                question: "O ministro‑substituto atua, em caráter permanente, junto à câmara para a qual for designado pelo Presidente do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição fiel do § 1º do Art. 11, que define a natureza da atuação do ministro-substituto nas câmaras como sendo permanente.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. O ministro‑substituto atua, em caráter permanente, junto à câmara para a qual for designado pelo Presidente do Tribunal."
+            },
+            {
+                question: "O ministro‑substituto atua, em caráter eventual, junto à câmara para a qual for designado pelo Presidente do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca da natureza da atuação. O § 1º do Art. 11 especifica que a atuação do ministro-substituto junto à câmara é \"em caráter permanente\", e não eventual.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. O ministro‑substituto atua, em caráter permanente, junto à câmara para a qual for designado pelo Presidente do Tribunal."
+            },
+            {
+                question: "Funciona junto a cada câmara um representante do Ministério Público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz literalmente o conteúdo do § 2º do Art. 11, que garante a presença de um membro do Ministério Público de Contas em cada câmara.<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. Funciona junto a cada câmara um representante do Ministério Público."
+            },
+            {
+                question: "É permitida a permuta ou remoção voluntária de ministros, de uma para outra câmara, com anuência do Plenário, tendo preferência o mais antigo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão o procedimento para a mudança de ministros entre as câmaras, incluindo a necessidade de autorização do Plenário e o critério de preferência, conforme o § 3º do Art. 11.<br><br><strong>Dispositivo Legal:</strong><br>§ 3º. É permitida a permuta ou remoção voluntária de ministros, de uma para outra câmara, com anuência do Plenário, tendo preferência o mais antigo."
+            },
+            {
+                question: "É vedada a permuta ou remoção voluntária de ministros de uma para outra câmara.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na afirmação de que a prática é \"vedada\" (proibida), quando o § 3º do Art. 11 expressamente afirma que ela \"É permitida\", desde que cumpridos os requisitos.<br><br><strong>Dispositivo Legal:</strong><br>§ 3º. É permitida a permuta ou remoção voluntária de ministros, de uma para outra câmara, com anuência do Plenário, tendo preferência o mais antigo."
+            },
+            {
+                question: "A permuta ou remoção voluntária de ministros entre as câmaras depende da anuência do Presidente do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar a autoridade competente pela aprovação. O § 3º do Art. 11 exige a \"anuência do Plenário\", e não do Presidente.<br><br><strong>Dispositivo Legal:</strong><br>§ 3º. É permitida a permuta ou remoção voluntária de ministros, de uma para outra câmara, com anuência do Plenário, tendo preferência o mais antigo."
+            },
+            {
+                question: "As câmaras são presididas pelo Vice‑Presidente do Tribunal e pelo ministro mais antigo no exercício do cargo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois indica precisamente quem são os presidentes das duas câmaras do Tribunal, conforme o Art. 12, caput.<br><br><strong>Dispositivo Legal:</strong><br>Art. 12. As câmaras são presididas pelo Vice‑Presidente do Tribunal e pelo ministro mais antigo no exercício do cargo, designados pelo Presidente do Tribunal na primeira sessão ordinária de cada ano."
+            },
+            {
+                question: "As câmaras são presididas exclusivamente pelo Vice‑Presidente do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por ser restritiva. O Art. 12, caput, estabelece que as câmaras são presididas por duas autoridades distintas: o \"Vice-Presidente do Tribunal\" e o \"ministro mais antigo no exercício do cargo\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 12. As câmaras são presididas pelo Vice‑Presidente do Tribunal e pelo ministro mais antigo no exercício do cargo..."
+            },
+            {
+                question: "Os presidentes das câmaras são eleitos pelos respectivos membros na primeira sessão de cada ano.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na forma de escolha. Os presidentes das câmaras não são eleitos, mas sim \"designados pelo Presidente do Tribunal\", conforme a parte final do Art. 12, caput.<br><br><strong>Dispositivo Legal:</strong><br>Art. 12. As câmaras são presididas [...] designados pelo Presidente do Tribunal na primeira sessão ordinária de cada ano."
+            },
+            {
+                question: "Na hipótese de o Vice‑Presidente suceder o Presidente do Tribunal, assumirá a Presidência da câmara o ministro mais antigo no exercício do cargo, entre os que dela fizerem parte.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a regra de sucessão na presidência de uma câmara quando o seu presidente original (o Vice-Presidente do TCU) assume a Presidência do Tribunal, conforme o § 1º do Art. 12.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. Na hipótese de o Vice‑Presidente suceder o Presidente do Tribunal, nos termos da parte final do inciso I do art. 31, assumirá a Presidência da câmara o ministro mais antigo no exercício do cargo, entre os que dela fizerem parte."
+            },
+            {
+                question: "Na hipótese de o Vice-Presidente suceder o Presidente do Tribunal, a presidência da câmara que ele ocupava ficará vaga até nova designação.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta, pois a norma prevê uma solução imediata para a vacância. O § 1º do Art. 12 determina que \"assumirá a Presidência da câmara o ministro mais antigo no exercício do cargo, entre os que dela fizerem parte\".<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. Na hipótese de o Vice‑Presidente suceder o Presidente do Tribunal, [...] assumirá a Presidência da câmara o ministro mais antigo no exercício do cargo, entre os que dela fizerem parte."
+            },
+            {
+                question: "O Presidente de cada câmara será substituído, em suas ausências e impedimentos, pelo ministro mais antigo no exercício do cargo, entre os que dela fizerem parte.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e é uma transcrição literal da regra de substituição temporária do presidente de uma câmara, contida no § 2º do Art. 12.<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. O Presidente de cada câmara será substituído, em suas ausências e impedimentos, pelo ministro mais antigo no exercício do cargo, entre os que dela fizerem parte."
+            },
+            {
+                question: "O Presidente de cada câmara será substituído, em suas ausências, pelo Presidente do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao indicar o substituto errado. O § 2º do Art. 12 define que o substituto é \"o ministro mais antigo no exercício do cargo, entre os que dela fizerem parte\", e não o Presidente do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. O Presidente de cada câmara será substituído, em suas ausências e impedimentos, pelo ministro mais antigo no exercício do cargo, entre os que dela fizerem parte."
+            },
+            {
+                question: "O Presidente do Tribunal, ao deixar o cargo, passará a integrar a câmara a que pertencia o seu sucessor.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a regra de alocação do ex-presidente, que irá para a câmara anteriormente ocupada por aquele que o sucedeu na Presidência, conforme o Art. 13.<br><br><strong>Dispositivo Legal:</strong><br>Art. 13. O Presidente do Tribunal, ao deixar o cargo, passará a integrar a câmara a que pertencia o seu sucessor."
+            },
+            {
+                question: "O Presidente do Tribunal, ao deixar o cargo, retornará à câmara que integrava antes de assumir a Presidência.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em presumir que o ex-presidente volta para sua câmara de origem. O Art. 13 estabelece uma regra de \"troca\", determinando que ele passará a integrar a câmara \"a que pertencia o seu sucessor\".<br><br><strong>Dispositivo Legal:</strong><br>Art. 13. O Presidente do Tribunal, ao deixar o cargo, passará a integrar a câmara a que pertencia o seu sucessor."
+            },
+            {
+                question: "O ministro, ao ser empossado, passa a integrar a câmara onde exista vaga.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e é uma transcrição literal do Art. 14, que estabelece o critério para a lotação inicial de um novo ministro em uma das câmaras do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 14. O ministro, ao ser empossado, passa a integrar a câmara onde exista vaga."
+            },
+            {
+                question: "O ministro, ao ser empossado, poderá escolher a câmara que deseja integrar.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao sugerir uma faculdade de escolha. O Art. 14 define um critério objetivo: o novo ministro \"passa a integrar a câmara onde exista vaga\", não havendo previsão de escolha pessoal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 14. O ministro, ao ser empossado, passa a integrar a câmara onde exista vaga."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>

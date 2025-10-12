@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sede e Composição</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Sede e Composição</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "O Tribunal de Contas da União tem sede no Distrito Federal e compõe‑se de nove ministros.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz literalmente as informações sobre a sede e a composição do Tribunal de Contas da União, conforme estabelecido no Art. 6º.<br><br><strong>Dispositivo Legal:</strong><br>Art. 6º O Tribunal de Contas da União tem sede no Distrito Federal e compõe‑se de nove ministros."
+            },
+            {
+                question: "O Tribunal de Contas da União tem sede no Distrito Federal e compõe‑se de onze ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no número de ministros que compõem o Tribunal. O Art. 6º estabelece que o TCU é composto por \"nove ministros\", e não onze.<br><br><strong>Dispositivo Legal:</strong><br>Art. 6º O Tribunal de Contas da União tem sede no Distrito Federal e compõe‑se de nove ministros."
+            },
+            {
+                question: "São órgãos do Tribunal o Plenário, a Primeira e a Segunda câmaras, o Presidente, as comissões, de caráter permanente ou temporário, e a Corregedoria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois elenca de forma exata todos os órgãos que compõem a estrutura do Tribunal, de acordo com o rol taxativo do Art. 7º.<br><br><strong>Dispositivo Legal:</strong><br>Art. 7º São órgãos do Tribunal o Plenário, a Primeira e a Segunda câmaras, o Presidente, as comissões, de caráter permanente ou temporário, e a Corregedoria, que colaborarão no desempenho de suas atribuições."
+            },
+            {
+                question: "São órgãos do Tribunal o Plenário, as câmaras, o Presidente, o Vice-Presidente e a Corregedoria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em incluir o \"Vice-Presidente\" como um órgão do Tribunal. Embora seja um cargo de extrema importância, o Art. 7º não o lista como um dos órgãos da instituição.<br><br><strong>Dispositivo Legal:</strong><br>Art. 7º São órgãos do Tribunal o Plenário, a Primeira e a Segunda câmaras, o Presidente, as comissões, de caráter permanente ou temporário, e a Corregedoria..."
+            },
+            {
+                question: "O Presidente, em suas ausências e impedimentos, por motivo de licença, férias ou outro afastamento legal, será substituído pelo Vice‑Presidente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a regra de sucessão do Presidente do Tribunal, indicando o Vice-Presidente como seu substituto imediato, conforme o caput do Art. 8º.<br><br><strong>Dispositivo Legal:</strong><br>Art. 8º O Presidente, em suas ausências e impedimentos, por motivo de licença, férias ou outro afastamento legal, será substituído pelo Vice‑Presidente."
+            },
+            {
+                question: "O Presidente, em suas ausências e impedimentos, poderá ser substituído pelo Vice‑Presidente ou pelo ministro mais antigo em exercício.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em apresentar a substituição como uma opção e em colocar o ministro mais antigo como substituto imediato. O Art. 8º, caput, é imperativo (\"será substituído\") e define que o substituto direto é o Vice-Presidente.<br><br><strong>Dispositivo Legal:</strong><br>Art. 8º O Presidente, em suas ausências e impedimentos, por motivo de licença, férias ou outro afastamento legal, será substituído pelo Vice‑Presidente."
+            },
+            {
+                question: "Na ausência ou impedimento do Vice‑Presidente, o Presidente será substituído pelo ministro mais antigo em exercício no cargo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e descreve a segunda linha de sucessão da Presidência. Estando o substituto imediato (Vice-Presidente) também ausente ou impedido, o Presidente será substituído pelo ministro decano, nos termos do § 1º do Art. 8º.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. Na ausência ou impedimento do Vice‑Presidente, o Presidente será substituído pelo ministro mais antigo em exercício no cargo."
+            },
+            {
+                question: "Na ausência ou impedimento do Vice‑Presidente, este será substituído na Presidência pelo ministro mais antigo em exercício no cargo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta e representa uma \"pegadinha\" comum. O § 1º do Art. 8º define quem substitui o Presidente quando o Vice-Presidente não pode fazê-lo. Ele não trata da substituição do cargo de Vice-Presidente, mas sim da Presidência do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>§ 1º. Na ausência ou impedimento do Vice‑Presidente, o Presidente será substituído pelo ministro mais antigo em exercício no cargo."
+            },
+            {
+                question: "O Vice‑Presidente, em suas ausências e impedimentos, será substituído nas funções de Corregedor pelo ministro mais antigo em exercício no cargo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois especifica a regra de substituição do Vice-Presidente em uma de suas atribuições específicas, a de Corregedor, conforme o § 2º do Art. 8º.<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. O Vice‑Presidente, em suas ausências e impedimentos, por motivo de licença, férias ou outro afastamento legal, será substituído nas funções de Corregedor pelo ministro mais antigo em exercício no cargo."
+            },
+            {
+                question: "O Vice‑Presidente, em suas ausências e impedimentos, será substituído em todas as suas funções pelo ministro mais antigo em exercício no cargo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao generalizar a substituição. O § 2º do Art. 8º é específico e limita a substituição pelo ministro mais antigo \"nas funções de Corregedor\", não em \"todas as suas funções\".<br><br><strong>Dispositivo Legal:</strong><br>§ 2º. O Vice‑Presidente, em suas ausências e impedimentos, [...] será substituído nas funções de Corregedor pelo ministro mais antigo em exercício no cargo."
+            },
+            {
+                question: "Tanto o Presidente quanto o Vice-Presidente, em suas ausências, são substituídos pelo ministro mais antigo em exercício no cargo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O substituto imediato do Presidente é o Vice-Presidente (Art. 8º, caput). A substituição pelo ministro mais antigo só ocorre em situações específicas e subsidiárias, não sendo a regra geral para ambos os cargos.<br><br><strong>Dispositivo Legal:</strong><br>Art. 8º O Presidente, em suas ausências e impedimentos, [...] será substituído pelo Vice‑Presidente.<br>§ 1º. Na ausência ou impedimento do Vice‑Presidente, o Presidente será substituído pelo ministro mais antigo em exercício no cargo."
+            },
+            {
+                question: "Funciona junto ao Tribunal o Ministério Público, na forma estabelecida nos arts. 58 a 64.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a relação institucional do Ministério Público com o Tribunal e indica a referência normativa para sua atuação, conforme o Art. 9º.<br><br><strong>Dispositivo Legal:</strong><br>Art. 9º Funciona junto ao Tribunal o Ministério Público, na forma estabelecida nos arts. 58 a 64."
+            },
+            {
+                question: "O Ministério Público é um órgão subordinado ao Tribunal de Contas da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A expressão \"Funciona junto ao Tribunal\" denota atuação conjunta e colaborativa, mas com independência funcional. O Ministério Público de Contas não é subordinado hierarquicamente ao Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 9º Funciona junto ao Tribunal o Ministério Público, na forma estabelecida nos arts. 58 a 64."
+            },
+            {
+                question: "O Tribunal disporá de Secretaria para atender às atividades de apoio técnico e administrativo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e resume de forma precisa a finalidade da Secretaria do Tribunal, que é prover o suporte técnico e administrativo para o funcionamento da Corte, nos termos do Art. 10.<br><br><strong>Dispositivo Legal:</strong><br>Art. 10. O Tribunal disporá de Secretaria para atender às atividades de apoio técnico e administrativo, na forma estabelecida nos arts. 65 e 66."
+            },
+            {
+                question: "O Tribunal disporá de Secretaria para exercer as atividades de fiscalização e instrução processual.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. Embora a Secretaria execute atividades que subsidiam a fiscalização, o Art. 10 define sua função primordial como sendo de \"apoio técnico e administrativo\", e não a execução direta da atividade-fim de fiscalização, que é competência dos órgãos do Tribunal.<br><br><strong>Dispositivo Legal:</strong><br>Art. 10. O Tribunal disporá de Secretaria para atender às atividades de apoio técnico e administrativo, na forma estabelecida nos arts. 65 e 66."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
