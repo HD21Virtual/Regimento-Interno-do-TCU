@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composição e Competências das Comissões</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Composição e Competências das Comissões</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "As comissões que colaboram no desempenho das atribuições do Tribunal são permanentes ou temporárias.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do caput do Art. 18, que classifica as comissões do Tribunal em duas naturezas: permanentes e temporárias."
+            },
+            {
+                question: "As comissões que colaboram no desempenho das atribuições do Tribunal são exclusivamente de caráter permanente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em restringir a natureza das comissões. O Art. 18, caput, estabelece que as comissões podem ser tanto \"permanentes ou temporárias\"."
+            },
+            {
+                question: "São permanentes as comissões de Regimento e de Jurisprudência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois identifica com exatidão as duas comissões de caráter permanente existentes no Tribunal, conforme o parágrafo único do Art. 18."
+            },
+            {
+                question: "São permanentes as comissões de Regimento, de Jurisprudência e de Orçamento.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao adicionar uma comissão que não está listada na norma. O parágrafo único do Art. 18 menciona expressamente apenas as comissões \"de Regimento e de Jurisprudência\" como permanentes."
+            },
+            {
+                question: "As comissões permanentes compõem‑se de três membros efetivos e um suplente, designados pelo Presidente, entre ministros e ministros‑substitutos, do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a composição numérica, a forma de designação e os possíveis membros das comissões permanentes, nos termos do caput do Art. 19."
+            },
+            {
+                question: "As comissões permanentes compõem‑se de cinco membros efetivos, designados pelo Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por dois motivos. Primeiro, a composição é de \"três membros efetivos e um suplente\", e não cinco. Segundo, a designação é feita pelo \"Presidente\", e não pelo Plenário, conforme o Art. 19, caput."
+            },
+            {
+                question: "As comissões permanentes funcionarão com a presença de, no mínimo, dois membros.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois estabelece o quórum mínimo para o funcionamento das comissões permanentes, de acordo com o § 1º do Art. 19."
+            },
+            {
+                question: "As comissões permanentes funcionarão com a presença da totalidade de seus membros efetivos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em exigir a presença de todos os membros. O § 1º do Art. 19 define que o quórum mínimo para funcionamento é de \"dois membros\"."
+            },
+            {
+                question: "Integrará a Comissão de Regimento o ministro mais antigo no exercício do cargo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da regra de composição obrigatória da Comissão de Regimento, que deve incluir o ministro decano, conforme o § 2º do Art. 19."
+            },
+            {
+                question: "Integrará a Comissão de Jurisprudência o ministro mais antigo no exercício do cargo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside em trocar a comissão. A obrigatoriedade da participação do ministro mais antigo, segundo o § 2º do Art. 19, aplica-se à \"Comissão de Regimento\", e não à de Jurisprudência."
+            },
+            {
+                question: "Na composição das comissões de Regimento e de Jurisprudência será assegurada a participação de ministros das duas câmaras.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com precisão a regra que garante a representatividade de ambas as câmaras nas comissões permanentes, conforme o § 3º do Art. 19."
+            },
+            {
+                question: "Na composição da comissão de Regimento, será assegurada a participação de ministros de apenas uma das câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em restringir a representatividade. O § 3º do Art. 19 determina que, tanto na comissão de Regimento quanto na de Jurisprudência, deve ser assegurada a participação de ministros \"das duas câmaras\"."
+            },
+            {
+                question: "O ministro integrante de comissão permanente será substituído, naquela atividade, preferencialmente pelo suplente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois estabelece a primeira regra de substituição de um membro de comissão permanente, que é a convocação do suplente, de acordo com o § 4º do Art. 19."
+            },
+            {
+                question: "O ministro integrante de comissão permanente será substituído, naquela atividade, obrigatoriamente pelo suplente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no uso do termo \"obrigatoriamente\". O § 4º do Art. 19 estabelece que a substituição se dá \"preferencialmente\" pelo suplente, prevendo a possibilidade de convocação de ministro-substituto na ausência daquele."
+            },
+            {
+                question: "Na ausência do suplente, o ministro integrante de comissão permanente será substituído por ministro-substituto convocado.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve a segunda linha de substituição prevista no § 4º do Art. 19, que é acionada na impossibilidade de atuação do substituto preferencial (o suplente)."
+            },
+            {
+                question: "As comissões temporárias compõem‑se de dois ou mais membros, entre ministros e ministros‑substitutos, indicados pelo Presidente no ato de sua constituição.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 20, que define a composição, os possíveis membros, a autoridade responsável pela indicação e o momento da constituição das comissões temporárias."
+            },
+            {
+                question: "As comissões temporárias compõem‑se de, no mínimo, três membros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na quantidade mínima de membros. O Art. 20 estabelece que a composição é de \"dois ou mais membros\", e não de, no mínimo, três."
+            },
+            {
+                question: "As comissões temporárias são compostas por membros indicados pelo Plenário do Tribunal no ato de sua constituição.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência da indicação ao Plenário. O Art. 20 é claro ao definir que os membros são \"indicados pelo Presidente\"."
+            },
+            {
+                question: "Cada comissão será presidida pelo ministro mais antigo de seus integrantes.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz com exatidão a regra de definição da presidência das comissões, que é exercida pelo membro com mais tempo no cargo, conforme o Art. 21."
+            },
+            {
+                question: "Cada comissão será presidida por um membro eleito entre seus pares.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no método de escolha do presidente. O Art. 21 estabelece um critério objetivo de antiguidade (\"ministro mais antigo\"), não prevendo eleição."
+            },
+            {
+                question: "Cuidar da atualização do Regimento Interno é uma das atribuições da Comissão de Regimento.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete a principal atribuição da comissão, conforme o início do inciso I do Art. 22."
+            },
+            {
+                question: "É atribuição da Comissão de Regimento apresentar projetos de alteração do texto em vigor do Regimento Interno.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve uma das formas pela qual a Comissão de Regimento exerce sua atribuição de atualizar a norma, que é por meio da apresentação de projetos, de acordo com o Art. 22, I."
+            },
+            {
+                question: "Compete à Comissão de Regimento emitir parecer sobre projeto de alteração regimental apresentado por ministro ou sugestão oferecida por ministro‑substituto ou representante do Ministério Público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois detalha a competência da comissão para atuar como órgão opinativo sobre propostas de alteração do regimento oriundas de outras autoridades, nos termos do Art. 22, I."
+            },
+            {
+                question: "Compete à Comissão de Regimento emitir parecer sobre projeto de alteração regimental apresentado apenas por ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir os legitimados. O inciso I do Art. 22 estabelece que a comissão também emite parecer sobre \"sugestão oferecida por ministro-substituto ou representante do Ministério Público\"."
+            },
+            {
+                question: "A Comissão de Regimento tem competência apenas para apresentar projetos de alteração do Regimento, não podendo emitir parecer sobre projetos de outras autoridades.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em restringir as atribuições da comissão. O inciso I do Art. 22 confere à comissão ambas as competências: tanto a de \"apresentação de projetos\" quanto a de \"emissão de parecer\"."
+            },
+            {
+                question: "São atribuições da Comissão de Regimento opinar em processo administrativo, quando consultada pelo Presidente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência da comissão para emitir pareceres em processos administrativos, desde que provocada pelo Presidente do Tribunal, conforme o Art. 22, II."
+            },
+            {
+                question: "Compete à Comissão de Regimento opinar em qualquer processo administrativo, independentemente de consulta.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em remover a condição para a atuação da comissão. O inciso II do Art. 22 condiciona a emissão de parecer à consulta prévia (\"quando consultada pelo Presidente\")."
+            },
+            {
+                question: "A Comissão de Regimento opinará em processo administrativo sempre que for consultada pelo Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar a autoridade que realiza a consulta. O inciso II do Art. 22 especifica que a consulta deve ser feita \"pelo Presidente\", e não pelo Plenário."
+            },
+            {
+                question: "É atribuição da Comissão de Regimento elaborar e aprovar suas normas de serviço.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à competência da comissão para definir suas próprias regras de funcionamento interno, de acordo com o Art. 22, III."
+            },
+            {
+                question: "Compete à Comissão de Regimento elaborar suas normas de serviço, as quais deverão ser submetidas à aprovação do Presidente do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em adicionar uma etapa de aprovação externa. O inciso III do Art. 22 confere à própria comissão a competência para \"elaborar e aprovar\" suas normas, indicando autonomia para tal ato."
+            },
+            {
+                question: "Manter a atualização e a publicação da Súmula da Jurisprudência do Tribunal é uma das atribuições da Comissão de Jurisprudência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência da Comissão de Jurisprudência, conforme o Art. 23, inciso I."
+            },
+            {
+                question: "É atribuição da Comissão de Jurisprudência propor a criação e a primeira publicação da Súmula da Jurisprudência.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está nos verbos utilizados. A competência da comissão, segundo o Art. 23, inciso I, é de \"manter a atualização e a publicação\", e não de criar a súmula."
+            },
+            {
+                question: "É atribuição da Comissão de Jurisprudência manter a atualização e a publicação do Regimento Interno do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar o objeto da atribuição. A competência descrita no Art. 23, inciso I, refere-se à \"Súmula da Jurisprudência\", e não ao Regimento Interno, que é atribuição da Comissão de Regimento."
+            },
+            {
+                question: "São atribuições da Comissão de Jurisprudência superintender os serviços de sistematização e divulgação da jurisprudência predominante do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à primeira parte da competência estabelecida no Art. 23, inciso II."
+            },
+            {
+                question: "É atribuição da Comissão de Jurisprudência executar diretamente todos os serviços de sistematização e divulgação da jurisprudência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na troca do verbo \"superintender\" por \"executar diretamente\". Superintender implica em dirigir e supervisionar, não necessariamente em executar todas as tarefas. A redação original está no Art. 23, inciso II."
+            },
+            {
+                question: "Compete à Comissão de Jurisprudência sugerir medidas que facilitem a pesquisa de julgados ou processos.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e descreve com precisão a parte final da atribuição contida no Art. 23, inciso II, que visa aprimorar o acesso à jurisprudência."
+            },
+            {
+                question: "Compete à Comissão de Jurisprudência determinar medidas obrigatórias que facilitem a pesquisa de julgados ou processos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na troca da palavra \"sugerindo\" por \"determinar\". A competência da comissão é de sugerir, e não de impor medidas, conforme o Art. 23, inciso II."
+            },
+            {
+                question: "É atribuição da Comissão de Jurisprudência propor ao colegiado que seja compendiada em súmula a jurisprudência do Tribunal, quando verificar que o Plenário e as câmaras não divergem em suas decisões sobre determinada matéria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência e da condição para a proposição de novas súmulas, nos exatos termos do Art. 23, inciso III."
+            },
+            {
+                question: "Compete à Comissão de Jurisprudência, por ato próprio, compendiar em súmula a jurisprudência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a comissão pode agir por \"ato próprio\". O Art. 23, inciso III, estabelece que a atribuição da comissão é de \"propor ao colegiado\", que é quem delibera sobre a aprovação da súmula."
+            },
+            {
+                question: "A Comissão de Jurisprudência poderá propor a edição de súmula mesmo que verifique que o Plenário e as câmaras divergem em suas decisões sobre determinada matéria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ignorar a condição para a propositura. O Art. 23, inciso III, condiciona a proposta ao fato de a comissão verificar que \"o Plenário e as câmaras não divergem em suas decisões\"."
+            },
+            {
+                question: "A verificação de que o Plenário e as câmaras não divergem sobre determinada matéria é requisito para que a Comissão de Jurisprudência proponha a compilação daquele entendimento em súmula.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois interpreta fielmente a condição expressa na parte final do Art. 23, inciso III, para a apresentação da proposta de súmula."
+            },
+            {
+                question: "Compete à Comissão de Jurisprudência propor ao Presidente que seja compendiada em súmula a jurisprudência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no destinatário da proposta. O Art. 23, inciso III, indica que a proposta deve ser feita \"ao colegiado\" (Plenário), e não ao Presidente do Tribunal."
+            },
+            {
+                question: "São atribuições da Comissão de Jurisprudência elaborar e aprovar suas normas de serviço.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à competência da comissão para definir suas próprias regras de funcionamento interno, de acordo com o Art. 23, inciso IV."
+            },
+            {
+                question: "Compete à Comissão de Jurisprudência elaborar suas normas de serviço e submetê-las à aprovação do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em adicionar uma etapa de aprovação externa. O Art. 23, inciso IV, confere à própria comissão a competência para \"elaborar e aprovar\" suas normas, indicando autonomia para tal ato."
+            },
+            {
+                question: "A elaboração e aprovação das normas de serviço é uma atribuição comum às comissões de Regimento e de Jurisprudência.",
+                answer: "Certo",
+                rationale: "A assertiva está correta. Conforme o Art. 23, inciso IV, a Comissão de Jurisprudência tem essa atribuição, e o Art. 22, inciso III (analisado anteriormente), confere a mesma competência à Comissão de Regimento. Portanto, a atribuição é comum a ambas as comissões permanentes."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
