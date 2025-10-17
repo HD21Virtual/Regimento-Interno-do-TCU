@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eleição do Presidente e do Vice-Presidente</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Eleição do Presidente e do Vice-Presidente</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Somente os ministros, ainda que no gozo de licença, férias ou outro afastamento legal, podem participar da eleição para Presidente e Vice-Presidente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do § 5º do Art. 24, que define o eleitorado e estabelece que mesmo os ministros afastados legalmente mantêm o direito de voto."
+            },
+            {
+                question: "Apenas os ministros em efetivo exercício podem participar da eleição, sendo vedada a participação daqueles em gozo de licença, férias ou outro afastamento legal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar a participação de ministros afastados. O § 5º do Art. 24 é explícito ao afirmar que eles podem participar \"ainda que no gozo de licença, férias ou outro afastamento legal\"."
+            },
+            {
+                question: "Somente os ministros e os ministros-substitutos podem participar da eleição para Presidente e Vice-Presidente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao incluir os ministros-substitutos no colégio eleitoral. O § 5º do Art. 24 restringe a participação na eleição \"somente aos ministros\"."
+            },
+            {
+                question: "A eleição do Presidente precederá a do Vice‑Presidente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reproduz com exatidão a ordem cronológica do processo eleitoral, conforme estabelecido no § 6º do Art. 24."
+            },
+            {
+                question: "A eleição do Vice‑Presidente precederá a do Presidente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na inversão da ordem dos atos. O § 6º do Art. 24 determina que a eleição \"do Presidente precederá a do Vice-Presidente\"."
+            },
+            {
+                question: "A eleição do Presidente e a do Vice-Presidente ocorrerão de forma simultânea.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a eleição é simultânea. O § 6º do Art. 24 estabelece uma ordem sucessiva, determinando que a eleição \"do Presidente precederá a do Vice-Presidente\"."
+            },
+            {
+                question: "A eleição para Presidente e Vice-Presidente será efetuada pelo sistema de cédula única.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente o sistema de votação adotado, de acordo com o caput do § 7º do Art. 24."
+            },
+            {
+                question: "A eleição será efetuada pelo sistema de cédulas distintas para cada cargo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar o uso de cédulas distintas. O caput do § 7º do Art. 24 especifica que a eleição se dará pelo sistema de \"cédula única\"."
+            },
+            {
+                question: "O ministro que estiver presidindo a sessão chamará, na ordem de antiguidade, os ministros, que colocarão na urna os seus votos, contidos em invólucros fechados.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do procedimento de votação presencial, conforme descrito no inciso I do § 7º do Art. 24."
+            },
+            {
+                question: "O ministro que estiver presidindo a sessão chamará, em ordem alfabética, os ministros para depositarem seus votos na urna.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no critério de chamada para a votação. O inciso I do § 7º do Art. 24 estabelece que a chamada ocorrerá \"na ordem de antiguidade\", e não em ordem alfabética."
+            },
+            {
+                question: "O ministro que estiver presidindo a sessão recolherá os votos dos demais ministros, que serão abertos e declarados individualmente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na forma de depósito e na publicidade do voto. O inciso I do § 7º do Art. 24 determina que os próprios ministros \"colocarão na urna os seus votos, contidos em invólucros fechados\"."
+            },
+            {
+                question: "O ministro que não comparecer à sessão poderá enviar à Presidência o seu voto, em sobrecarta fechada, onde será declarada a sua destinação.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão o procedimento para o voto à distância, nos exatos termos do inciso II do § 7º do Art. 24."
+            },
+            {
+                question: "O ministro que não comparecer à sessão perderá o direito de voto, sendo vedado o voto à distância.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar uma possibilidade expressamente prevista na norma. O inciso II do § 7º do Art. 24 permite que o ministro ausente \"possa enviar à Presidência o seu voto\"."
+            },
+            {
+                question: "O ministro que não comparecer à sessão poderá nomear um procurador para votar em seu nome.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao prever o voto por procuração. O inciso II do § 7º do Art. 24 estabelece um procedimento específico para o voto do ausente, que consiste no envio do voto \"em sobrecarta fechada\", não havendo previsão para voto por procurador."
+            },
+            {
+                question: "O ministro ausente poderá enviar seu voto à Presidência por meio eletrônico, desde que com certificação digital.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no meio utilizado para o envio do voto. O inciso II do § 7º do Art. 24 especifica o meio físico (\"em sobrecarta fechada\"), não prevendo, neste dispositivo, o uso de meio eletrônico."
+            },
+            {
+                question: "As sobrecartas contendo os votos dos ministros ausentes serão depositadas na urna, pelo Presidente, sem quebra de sigilo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do procedimento a ser adotado com os votos enviados pelos ministros ausentes, garantindo a integridade e o sigilo do voto, conforme o inciso III do § 7º."
+            },
+            {
+                question: "As sobrecartas contendo os votos dos ministros ausentes serão abertas pelo Presidente, que depositará a cédula correspondente na urna.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em afirmar que a sobrecarta será aberta. O inciso III do § 7º estabelece que as sobrecartas serão depositadas na urna \"sem quebra de sigilo\", o que significa que o invólucro externo não é violado."
+            },
+            {
+                question: "Considerar‑se‑á eleito, em primeiro escrutínio, o ministro que obtiver os votos de mais da metade dos membros do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão o critério para a vitória na primeira rodada de votação, que é a obtenção da maioria absoluta dos votos dos membros do Tribunal, nos termos do inciso IV do § 7º."
+            },
+            {
+                question: "Considerar‑se‑á eleito, em primeiro escrutínio, o ministro que obtiver a maioria simples dos votos apurados.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no tipo de maioria exigida. O inciso IV do § 7º exige a maioria absoluta (\"mais da metade dos membros do Tribunal\"), e não a maioria simples dos votos."
+            },
+            {
+                question: "Concorrerão em segundo escrutínio somente os dois ministros mais votados no primeiro.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois estabelece fielmente a regra de quem está apto a disputar a segunda rodada de votação, caso ninguém atinja a maioria absoluta no primeiro escrutínio, conforme a primeira parte do inciso V do § 7º."
+            },
+            {
+                question: "Concorrerão em segundo escrutínio todos os ministros que receberem votos no primeiro.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em ampliar o número de candidatos no segundo turno. O inciso V do § 7º restringe a disputa a \"somente os dois ministros mais votados no primeiro\"."
+            },
+            {
+                question: "Em segundo escrutínio, proclamar‑se‑á eleito, entre os dois concorrentes, o mais votado.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve o critério principal para a vitória no segundo turno, que é a obtenção da maioria simples dos votos entre os dois candidatos, de acordo com o inciso V do § 7º."
+            },
+            {
+                question: "Se ocorrer empate no segundo escrutínio, proclamar‑se‑á eleito o ministro mais antigo no cargo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois indica com precisão o critério de desempate a ser utilizado caso os dois candidatos recebam o mesmo número de votos no segundo turno, conforme a parte final do inciso V do § 7º."
+            },
+            {
+                question: "Se ocorrer empate no segundo escrutínio, proclamar‑se‑á eleito o ministro mais idoso.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no critério de desempate. O inciso V do § 7º estabelece que o critério é a antiguidade no cargo (\"o mais antigo no cargo\"), e não a idade (\"o mais idoso\")."
+            },
+            {
+                question: "O escolhido para a vaga que ocorrer antes do término do mandato será empossado na mesma sessão em que for eleito e exercerá o cargo, conforme o caso, no período restante.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 25, que estabelece o momento da posse e a duração do mandato para aquele eleito em virtude de vacância (mandato-tampão)."
+            },
+            {
+                question: "O escolhido para a vaga que ocorrer antes do término do mandato será empossado na sessão ordinária seguinte à da eleição.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no momento da posse. O Art. 25 determina que o eleito será empossado \"na mesma sessão em que for eleito\", e não na sessão seguinte."
+            },
+            {
+                question: "O escolhido para a vaga que ocorrer antes do término do mandato exercerá o cargo por um novo mandato completo de um ano.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao definir a duração do mandato. O Art. 25 estabelece que o eleito exercerá o cargo apenas \"no período restante\" do mandato do seu antecessor."
+            },
+            {
+                question: "A posse do Presidente e do Vice‑Presidente do Tribunal, eleitos para entrarem em exercício a partir de 1º de janeiro do ano seguinte, será dada em sessão extraordinária a ser realizada até 16 de dezembro.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente o tipo de sessão, o prazo e a data de início do exercício para os dirigentes eleitos no pleito regular, conforme o caput do Art. 26."
+            },
+            {
+                question: "A posse do Presidente e do Vice‑Presidente do Tribunal será dada em sessão ordinária a ser realizada até 16 de dezembro.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside no tipo de sessão. O caput do Art. 26 especifica que a posse ocorrerá em \"sessão extraordinária\", e não em sessão ordinária."
+            },
+            {
+                question: "A posse do Presidente e do Vice‑Presidente do Tribunal, eleitos para o mandato regular, será dada em sessão a ser realizada até o último dia útil de dezembro.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao alterar o prazo para a posse. O caput do Art. 26 estabelece como data limite o dia \"16 de dezembro\", e não o final do mês."
+            },
+            {
+                question: "No ato de posse, o Presidente e o Vice‑Presidente prestarão o seguinte compromisso: “PROMETO DESEMPENHAR COM INDEPENDÊNCIA E EXAÇÃO OS DEVERES DO MEU CARGO, CUMPRINDO E FAZENDO CUMPRIR A CONSTITUIÇÃO FEDERAL E AS LEIS DO PAÍS”.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois transcreve literalmente o texto do compromisso de posse, conforme estabelecido no § 1º do Art. 26."
+            },
+            {
+                question: "No ato de posse, o Presidente e o Vice‑Presidente prestarão o compromisso de desempenhar com independência e imparcialidade os deveres do cargo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca da palavra \"EXAÇÃO\" por \"imparcialidade\". O texto do compromisso, conforme o § 1º do Art. 26, utiliza expressamente o termo \"EXAÇÃO\"."
+            },
+            {
+                question: "Em caso de licença ou outro afastamento legal, a posse poderá ocorrer mediante procuração específica, devendo o empossado firmar o compromisso por escrito.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão o procedimento para a posse por procuração em casos de afastamento legal, incluindo a necessidade de procuração específica e da assinatura do termo, nos termos do § 2º do Art. 26."
+            },
+            {
+                question: "É vedada a posse mediante procuração, devendo o eleito comparecer pessoalmente ao ato em qualquer circunstância.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar uma possibilidade expressamente prevista na norma. O § 2º do Art. 26 permite que, \"em caso de licença ou outro afastamento legal, a posse poderá ocorrer mediante procuração específica\"."
+            },
+            {
+                question: "Em caso de afastamento legal, a posse poderá ocorrer mediante procuração geral, não sendo necessário firmar o compromisso por escrito.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por dois motivos. Primeiro, a norma exige \"procuração específica\", e não geral. Segundo, o § 2º do Art. 26 determina que o empossado \"deverá firmar o compromisso por escrito\"."
+            },
+            {
+                question: "Serão lavrados pelo dirigente da unidade responsável pelo secretariado das sessões, em livro próprio, os termos de posse do Presidente e do Vice‑Presidente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 27, que define o responsável e a forma de registro dos termos de posse."
+            },
+            {
+                question: "Serão lavrados pelo ministro mais antigo em exercício os termos de posse do Presidente e do Vice‑Presidente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a responsabilidade ao ministro errado. O Art. 27 estabelece que os termos de posse serão lavrados \"pelo dirigente da unidade responsável pelo secretariado das sessões\"."
+            },
+            {
+                question: "Os termos de posse do Presidente e do Vice‑Presidente serão registrados na ata da sessão extraordinária de posse.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no local do registro. O Art. 27 especifica que os termos de posse serão lavrados \"em livro próprio\", e não na ata da sessão."
+            },
+            {
+                question: "Serão lavrados pelo Secretário-Geral da Presidência, em livro próprio, os termos de posse do Presidente e do Vice‑Presidente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. Embora o Secretário-Geral da Presidência seja uma autoridade importante, o Art. 27 define a responsabilidade de forma mais genérica como sendo do \"dirigente da unidade responsável pelo secretariado das sessões\"."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
