@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competência do Presidente</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Competências do Presidente</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Compete ao Presidente dirigir os trabalhos e superintender a ordem e a disciplina do Tribunal e de sua Secretaria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para dirigir e supervisionar as atividades e a disciplina do Tribunal e de sua Secretaria, conforme o Art. 28, inciso I."
+            },
+            {
+                question: "Compete ao Presidente dirigir os trabalhos do Tribunal, cabendo ao Secretário-Geral de Controle Externo superintender a ordem e a disciplina da Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em dividir uma competência que o inciso I do Art. 28 atribui integralmente ao Presidente. A norma estabelece que compete ao Presidente tanto dirigir os trabalhos quanto \"superintender a ordem e a disciplina do Tribunal e de sua Secretaria\"."
+            },
+            {
+                question: "Compete ao Presidente dirigir os trabalhos e superintender a ordem e a disciplina apenas do Tribunal, excluindo-se sua Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o alcance da competência presidencial. O inciso I do Art. 28 é claro ao afirmar que a superintendência abrange o \"Tribunal e de sua Secretaria\"."
+            },
+            {
+                question: "Compete ao Presidente representar o Tribunal perante os Poderes da União, dos estados e municípios, e demais autoridades.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência de representação externa do Presidente do Tribunal, nos exatos termos do Art. 28, inciso II."
+            },
+            {
+                question: "Compete ao Presidente representar o Tribunal perante os Poderes da União, sendo-lhe vedado representar o Tribunal perante os estados e municípios.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em vedar uma prerrogativa expressa. O inciso II do Art. 28 estabelece que a representação se dá perante os Poderes da União, \"dos estados e municípios, e demais autoridades\"."
+            },
+            {
+                question: "Compete ao Plenário representar o Tribunal perante os Poderes da União, dos estados e municípios.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao órgão errado. O Art. 28, inciso II, define que a representação externa do Tribunal é uma competência \"do Presidente\", e não do Plenário."
+            },
+            {
+                question: "Compete ao Presidente atender a pedido de informação, nos limites de sua competência, dando ciência ao Tribunal, se for o caso.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para responder a pedidos de informação, observando seus limites e a necessidade eventual de comunicar ao colegiado, conforme o Art. 28, inciso III."
+            },
+            {
+                question: "Compete ao Presidente atender a pedido de informação, mesmo que fora dos limites de sua competência.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em ignorar a restrição imposta pela norma. O inciso III do Art. 28 limita a competência do Presidente para atender a pedidos de informação \"nos limites de sua competência\"."
+            },
+            {
+                question: "Ao atender a pedido de informação, nos limites de sua competência, o Presidente deverá, em todos os casos, dar ciência ao Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao transformar uma ação condicional em obrigatória. O inciso III do Art. 28 estabelece que a ciência ao Tribunal deve ser dada \"se for o caso\", indicando que não é uma obrigação para todas as situações."
+            },
+            {
+                question: "Compete ao Presidente atender a pedido de informação decorrente de decisão do Tribunal ou de iniciativa de ministro sobre questão administrativa.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão as duas origens de pedidos de informação sobre matéria administrativa que devem ser atendidos pelo Presidente, nos termos do Art. 28, inciso IV."
+            },
+            {
+                question: "Compete ao Presidente atender a pedido de informação decorrente de decisão do Tribunal sobre qualquer matéria, ou de iniciativa de ministro sobre questão administrativa.",
+                answer: "Certo",
+                rationale: "Esta assertiva também está correta, pois o dispositivo legal (Art. 28, IV) não restringe o \"pedido de informação decorrente de decisão do Tribunal\" apenas a questões administrativas, sendo uma interpretação literal válida."
+            },
+            {
+                question: "Compete ao Presidente atender a pedido de informação decorrente de decisão do Presidente sobre questão administrativa.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar a origem do pedido. O inciso IV do Art. 28 refere-se a pedido decorrente de \"decisão do Tribunal\" (colegiado) ou de \"iniciativa de ministro\", e não de decisão do próprio Presidente."
+            },
+            {
+                question: "Compete ao Presidente velar pelas prerrogativas do Tribunal, cumprindo e fazendo cumprir a sua Lei Orgânica e este Regimento Interno.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente como guardião das prerrogativas da instituição e da observância de suas normas fundamentais, conforme o Art. 28, inciso V."
+            },
+            {
+                question: "Compete ao Presidente velar pelas prerrogativas do Tribunal, cumprindo e fazendo cumprir apenas este Regimento Interno.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em restringir as normas a serem observadas. O inciso V do Art. 28 estabelece que o Presidente deve zelar pelo cumprimento da \"Lei Orgânica e este Regimento Interno\"."
+            },
+            {
+                question: "Compete ao Presidente propor alterações na Lei Orgânica e neste Regimento Interno.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside na troca dos verbos. A competência definida no inciso V do Art. 28 é de \"velar\" pelas normas e \"cumprindo e fazendo cumprir\", e não de propor alterações."
+            },
+            {
+                question: "Compete ao Presidente do Tribunal de Contas da União presidir as sessões plenárias.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente, conforme estabelecido no Art. 28, inciso VI."
+            },
+            {
+                question: "Compete ao Vice-Presidente do Tribunal de Contas da União presidir as sessões plenárias.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em atribuir a competência ao Vice-Presidente. O Art. 28, inciso VI, é claro ao determinar que compete \"ao Presidente\" presidir as sessões plenárias."
+            },
+            {
+                question: "Compete ao Presidente convocar sessão extraordinária do Plenário, observado o disposto no art. 98.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para convocar sessões extraordinárias, bem como a observância às regras específicas para tal ato, nos termos do Art. 28, inciso VII."
+            },
+            {
+                question: "Compete ao Presidente convocar sessão ordinária do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no tipo de sessão. O Art. 28, inciso VII, confere ao Presidente a competência para \"convocar sessão extraordinária\". As sessões ordinárias, por sua natureza, ocorrem periodicamente, não dependendo de convocação específica da presidência."
+            },
+            {
+                question: "Compete ao Presidente convocar sessão extraordinária do Plenário, independentemente do disposto no art. 98.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ignorar uma condição da norma. O Art. 28, inciso VII, estabelece que a convocação deve ocorrer \"observado o disposto no art. 98\"."
+            },
+            {
+                question: "Compete ao Presidente apresentar ao Plenário as questões de ordem e resolver os requerimentos que lhe sejam formulados.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com precisão as atribuições do Presidente na condução dos trabalhos do Plenário, conforme a primeira parte do Art. 28, inciso VIII."
+            },
+            {
+                question: "As decisões do Presidente ao resolver os requerimentos que lhe sejam formulados são irrecorríveis.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em afirmar que a decisão é irrecorrível. A parte final do Art. 28, inciso VIII, estabelece que o Presidente resolve os requerimentos \"sem prejuízo de recurso ao Plenário\"."
+            },
+            {
+                question: "Compete ao Presidente submeter ao Plenário a resolução de todas as questões de ordem e requerimentos que lhe sejam formulados.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em trocar \"apresentar\" e \"resolver\" por \"submeter\". O Art. 28, inciso VIII, determina que o Presidente deve \"apresentar\" as questões de ordem, mas ele mesmo deve \"resolver\" os requerimentos."
+            },
+            {
+                question: "Compete ao Presidente votar quando se apreciar inconstitucionalidade de lei ou de ato do poder público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 28, inciso X, que estabelece uma das hipóteses de votação do Presidente (historicamente, seu voto de qualidade ou desempate)."
+            },
+            {
+                question: "Ao Presidente é vedado votar quando se apreciar inconstitucionalidade de lei, devendo apenas presidir a sessão.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar uma competência expressa. O Art. 28, inciso X, determina que compete ao Presidente \"votar\" nesses casos."
+            },
+            {
+                question: "Compete ao Presidente votar em todas as matérias submetidas à apreciação do Plenário, em último lugar, exceto se for o relator do processo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 28, inciso XI, que estabelece a regra geral de votação do Presidente (vota em tudo), a ordem (em último lugar) e a exceção (quando é o relator)."
+            },
+            {
+                question: "Compete ao Presidente votar em todas as matérias submetidas à apreciação do Plenário, sendo sempre o primeiro a votar.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na ordem da votação. O Art. 28, inciso XI, estabelece que o Presidente vota \"em último lugar\", e não em primeiro."
+            },
+            {
+                question: "Compete ao Presidente votar em todas as matérias submetidas à apreciação do Plenário, em último lugar, inclusive se for o relator do processo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em trocar \"exceto\" por \"inclusive\". A norma (Art. 28, inciso XI) abre uma exceção à regra de votar por último, caso o Presidente seja o relator do processo (neste caso, ele vota como relator, na ordem regimental)."
+            },
+            {
+                question: "A competência do Presidente para votar restringe-se aos casos de apreciação de inconstitucionalidade de lei e aos casos de empate.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em restringir a competência de voto do Presidente. O Art. 28, inciso XI, é claro ao afirmar que ele deve \"votar em todas as matérias submetidas à apreciação do Plenário\", não apenas em casos específicos."
+            },
+            {
+                question: "O Presidente vota em todas as matérias do Plenário, exceto quando se apreciar inconstitucionalidade de lei ou de ato do poder público.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta, pois cria uma exceção que contradiz diretamente a norma. O Art. 28, inciso X, estabelece que o Presidente deve votar em casos de inconstitucionalidade, e o inciso XI confirma que ele vota em todas as matérias."
+            },
+            {
+                question: "Compete ao Presidente relatar e votar quando se apreciar agravo contra despacho decisório de sua autoria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para atuar como relator e votante no julgamento de agravos interpostos contra suas próprias decisões monocráticas, conforme o Art. 28, inciso XII."
+            },
+            {
+                question: "Compete ao Presidente apenas relatar, abstendo-se de votar, quando se apreciar agravo contra despacho decisório de sua autoria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em restringir a atuação do Presidente. O Art. 28, inciso XII, é explícito ao determinar que compete ao Presidente \"relatar e votar\"."
+            },
+            {
+                question: "Compete ao Presidente relatar e votar agravos contra despachos decisórios de autoria de qualquer ministro.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar o escopo da competência. O Art. 28, inciso XII, restringe a atuação do Presidente como relator e votante de agravos àqueles interpostos contra despachos \"de sua autoria\"."
+            },
+            {
+                question: "Compete ao Presidente dar ciência ao Plenário dos expedientes de interesse geral recebidos dos Poderes da União ou de quaisquer outras entidades.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para comunicar ao colegiado os expedientes relevantes recebidos de outras instituições, nos termos do Art. 28, inciso XIII."
+            },
+            {
+                question: "Compete ao Presidente dar ciência ao Plenário de todos os expedientes recebidos, independentemente de serem de interesse geral.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em remover o filtro de relevância. O Art. 28, inciso XIII, especifica que a ciência ao Plenário deve ser dada sobre os expedientes \"de interesse geral\"."
+            },
+            {
+                question: "Compete ao Presidente dar ciência ao Plenário dos expedientes de interesse geral recebidos exclusivamente dos Poderes da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir a origem dos expedientes. O Art. 28, inciso XIII, estabelece que a ciência abrange os expedientes recebidos \"dos Poderes da União ou de quaisquer outras entidades\"."
+            },
+            {
+                question: "Compete ao Presidente decidir as questões administrativas ou, quando considerá‑las relevantes, sortear relator para submetê‑las ao Plenário.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve as duas possibilidades de atuação do Presidente em matérias administrativas: decidir monocraticamente ou, em caso de relevância, submeter ao colegiado, conforme o Art. 28, inciso XIV."
+            },
+            {
+                question: "Compete ao Presidente decidir monocraticamente todas as questões administrativas, sendo-lhe vedado submetê-las ao Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar uma faculdade expressa. O Art. 28, inciso XIV, permite ao Presidente, \"quando considerá-las relevantes, sortear relator para submetê-las ao Plenário\"."
+            },
+            {
+                question: "Compete ao Presidente submeter todas as questões administrativas ao Plenário, não podendo decidi-las monocraticamente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em inverter a regra. A competência primária do Presidente, conforme o Art. 28, inciso XIV, é \"decidir as questões administrativas\", sendo a submissão ao Plenário uma faculdade para casos relevantes."
+            },
+            {
+                question: "A competência do Presidente para decidir questões administrativas ou submetê-las ao Plenário resguarda a competência da Corregedoria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois reflete fielmente a parte final do Art. 28, inciso XIV, que estabelece que a competência do Presidente não prejudica (resguarda) as atribuições de outros órgãos, como a Corregedoria."
+            },
+            {
+                question: "Compete ao Presidente submeter ao Plenário a proposta relativa a projeto de lei que o Tribunal deva encaminhar ao Poder Legislativo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para pautar no Plenário as propostas de iniciativa legislativa do Tribunal, nos termos do Art. 28, inciso XV."
+            },
+            {
+                question: "Compete ao Presidente aprovar e encaminhar diretamente ao Poder Legislativo os projetos de lei de iniciativa do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em atribuir ao Presidente a competência para aprovar o projeto. O Art. 28, inciso XV, estabelece que a competência do Presidente é \"submeter ao Plenário\" a proposta, cabendo ao colegiado a aprovação."
+            },
+            {
+                question: "Compete ao Presidente despachar os processos e documentos urgentes e determinar a realização de inspeção na hipótese de afastamento legal do relator no período de recesso.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão a competência do Presidente para tomar medidas urgentes durante o recesso do Tribunal, na ausência do relator, conforme o Art. 28, inciso XVI."
+            },
+            {
+                question: "Compete ao Presidente determinar a realização de inspeção a qualquer tempo, mesmo fora do período de recesso, na hipótese de afastamento legal do relator.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em generalizar a competência. O Art. 28, inciso XVI, restringe essa competência específica de determinar inspeção (na ausência do relator) \"no período de recesso\"."
+            },
+            {
+                question: "Compete ao Presidente despachar os processos e documentos urgentes, mesmo que o relator não esteja afastado, durante o período de recesso.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao remover uma condição essencial. O Art. 28, inciso XVI, condiciona a atuação do Presidente sobre processos de outros relatores à \"hipótese de afastamento legal do relator\"."
+            },
+            {
+                question: "Compete ao Presidente decidir sobre pedidos de vista e de cópia de peça de processo formulados pelas partes interessadas, nas hipóteses dos §§ 1º e 3º do art. 163.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para decidir sobre o acesso aos autos por partes interessadas, em casos específicos, conforme o Art. 28, inciso XVII."
+            },
+            {
+                question: "Compete ao Plenário decidir sobre pedidos de vista e de cópia de peça de processo formulados pelas partes interessadas, nas hipóteses dos §§ 1º e 3º do art. 163.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em atribuir a competência ao Plenário. O Art. 28, inciso XVII, estabelece que compete \"ao Presidente\" decidir sobre esses pedidos."
+            },
+            {
+                question: "Compete ao Presidente decidir sobre pedidos de vista e de cópia de peça de processo formulados por qualquer cidadão.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar o solicitante. O Art. 28, inciso XVII, especifica que a competência se refere a pedidos \"formulados pelas partes interessadas\", e não por \"qualquer cidadão\"."
+            },
+            {
+                question: "Compete ao Presidente cumprir e fazer cumprir as deliberações do Plenário.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente como executor das decisões colegiadas, nos termos do Art. 28, inciso XVIII."
+            },
+            {
+                question: "Compete ao Presidente cumprir, mas não fazer cumprir, as deliberações do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em restringir a competência. O Art. 28, inciso XVIII, estabelece que o Presidente deve tanto \"cumprir\" (ele mesmo) quanto \"fazer cumprir\" (exigir o cumprimento por outros)."
+            },
+            {
+                question: "Compete ao Presidente cumprir e fazer cumprir as deliberações do Plenário e das Câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao adicionar as Câmaras. O Art. 28, inciso XVIII, refere-se especificamente às deliberações \"do Plenário\"."
+            },
+            {
+                question: "Compete ao Presidente decidir sobre pedido de sustentação oral relativo a processo a ser submetido ao Plenário, na forma estabelecida no art. 168.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para autorizar a sustentação oral em processos plenários, conforme o Art. 28, inciso XIX."
+            },
+            {
+                question: "Compete ao Presidente decidir sobre pedido de sustentação oral relativo a processo a ser submetido ao Plenário ou às Câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar a competência. O Art. 28, inciso XIX, restringe a competência do Presidente (neste dispositivo) aos pedidos relativos a processos \"a ser submetido ao Plenário\"."
+            },
+            {
+                question: "Compete ao Plenário decidir sobre pedido de sustentação oral relativo a processo a ele submetido.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em atribuir a decisão ao Plenário (colegiado). O Art. 28, inciso XIX, estabelece que compete \"ao Presidente\" (ato monocrático) decidir sobre o pedido."
+            },
+            {
+                question: "Compete ao Presidente expedir certidões requeridas ao Tribunal na forma da lei.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para emitir certidões, conforme o Art. 28, inciso XX."
+            },
+            {
+                question: "Compete ao Presidente expedir certidões requeridas ao Tribunal, independentemente da forma prevista em lei.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em remover a condição de legalidade. O Art. 28, inciso XX, estabelece que a expedição de certidões deve ocorrer \"na forma da lei\"."
+            },
+            {
+                question: "Compete ao Secretário-Geral das Sessões expedir certidões requeridas ao Tribunal na forma da lei.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência à autoridade errada. O Art. 28, inciso XX, define que compete \"ao Presidente\" expedir as certidões."
+            },
+            {
+                question: "Compete ao Presidente dar posse a ministro, ministro‑substituto e ao procurador‑geral.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal das autoridades a quem o Presidente do Tribunal dá posse, nos termos do Art. 28, inciso XXI."
+            },
+            {
+                question: "Compete ao Presidente dar posse a ministro, ministro-substituto, procurador-geral e a todos os auditores federais de controle externo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar o rol de autoridades. O Art. 28, inciso XXI, restringe a competência de posse do Presidente a \"ministro, ministro-substituto e ao procurador-geral\", não incluindo os auditores."
+            },
+            {
+                question: "Compete ao Presidente dar posse apenas a ministro e ministro-substituto.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em excluir uma das autoridades. O Art. 28, inciso XXI, inclui expressamente \"o procurador-geral\" entre as autoridades a quem o Presidente dá posse."
+            },
+            {
+                question: "Compete ao Presidente designar os presidentes das câmaras, na forma estabelecida no art. 12.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente, conforme estabelecido no Art. 28, inciso XXII."
+            },
+            {
+                question: "Compete ao Plenário designar os presidentes das câmaras, na forma estabelecida no art. 12.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em atribuir a competência ao Plenário. O Art. 28, inciso XXII, é claro ao determinar que compete \"ao Presidente\" designar os presidentes das câmaras."
+            },
+            {
+                question: "Compete ao Presidente eleger os presidentes das câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. O Art. 28, inciso XXII, estabelece que a competência do Presidente é \"designar\", e não \"eleger\"."
+            },
+            {
+                question: "Compete ao Presidente expedir atos concernentes às relações jurídico‑funcionais dos ministros, ministros‑substitutos e membros do Ministério Público.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para expedir atos relativos à vida funcional das autoridades mencionadas, nos termos do Art. 28, inciso XXIII."
+            },
+            {
+                question: "Compete ao Presidente expedir atos concernentes às relações jurídico‑funcionais apenas dos ministros e ministros-substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em excluir uma das categorias. O Art. 28, inciso XXIII, inclui expressamente \"ministros, ministros-substitutos e membros do Ministério Público\"."
+            },
+            {
+                question: "Compete ao Plenário expedir atos concernentes às relações jurídico‑funcionais dos ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao órgão errado. O Art. 28, inciso XXIII, define que compete \"ao Presidente\" expedir tais atos."
+            },
+            {
+                question: "Compete ao Presidente definir a composição das câmaras, observado o disposto no § 3º do art. 55 e nos arts. 11 a 14.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para definir a composição dos órgãos fracionários, com a devida observância às normas regimentais, conforme o Art. 28, inciso XXIV."
+            },
+            {
+                question: "Compete ao Presidente definir a composição das câmaras, independentemente do disposto em outros artigos do regimento.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em ignorar a condição imposta pela norma. O Art. 28, inciso XXIV, estabelece que a definição da composição deve ocorrer \"observado o disposto no § 3º do art. 55 e nos arts. 11 a 14\"."
+            },
+            {
+                question: "Compete ao Presidente propor ao Plenário a definição da composição das câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. O Art. 28, inciso XXIV, confere ao Presidente a competência para \"definir\" (ato direto), e não para \"propor ao Plenário\"."
+            },
+            {
+                question: "Compete ao Presidente designar os ministros‑substitutos para atuarem, em caráter permanente, junto às câmaras.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para designar os ministros-substitutos para as câmaras, conforme o Art. 28, inciso XXV."
+            },
+            {
+                question: "Compete ao Presidente designar os ministros‑substitutos para atuarem, em caráter eventual, junto às câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca da natureza da atuação. O Art. 28, inciso XXV, especifica que a atuação é \"em caráter permanente\", e não eventual."
+            },
+            {
+                question: "Compete ao Plenário designar os ministros‑substitutos para atuarem, em caráter permanente, junto às câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao Plenário. O Art. 28, inciso XXV, define que compete \"ao Presidente\" realizar essa designação."
+            },
+            {
+                question: "Compete ao Presidente convocar ministro‑substituto para substituir ministro, na forma estabelecida nos incisos I e II do art. 55.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para convocar substitutos para os ministros titulares, nos termos do Art. 28, inciso XXVI."
+            },
+            {
+                question: "Compete ao Presidente convocar membro do Ministério Público para substituir ministro.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em indicar a autoridade errada para a substituição. O Art. 28, inciso XXVI, estabelece que o Presidente deve \"convocar ministro-substituto\", e não membro do Ministério Público, para substituir ministro."
+            },
+            {
+                question: "Compete ao Presidente convocar ministro-substituto para substituir ministro, independentemente da forma estabelecida no art. 55.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em ignorar a condição imposta pela norma. O Art. 28, inciso XXVI, estabelece que a convocação deve ocorrer \"na forma estabelecida nos incisos I e II do art. 55\"."
+            },
+            {
+                question: "Compete ao Presidente elaborar a lista tríplice segundo o critério de antiguidade dos ministros‑substitutos, na forma estabelecida no § 3º do art. 36.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para elaborar a lista tríplice de antiguidade para a vaga de ministro-substituto, conforme o Art. 28, inciso XXVII."
+            },
+            {
+                question: "Compete ao Presidente elaborar a lista tríplice segundo o critério de merecimento dos ministros‑substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca do critério. O Art. 28, inciso XXVII, estabelece que a elaboração da lista, neste caso, se dará pelo critério de \"antiguidade\", e não de merecimento."
+            },
+            {
+                question: "Compete ao Plenário elaborar a lista tríplice segundo o critério de antiguidade dos ministros‑substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao órgão errado. O Art. 28, inciso XXVII, define que compete \"ao Presidente\" elaborar a lista de antiguidade."
+            },
+            {
+                question: "Compete ao Presidente fixar, mediante Portaria, medidas de equalização para corrigir manifesta desproporção da carga de trabalho entre ministros e ministros-substitutos.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para expedir Portaria visando à equalização da distribuição de processos, nos termos do Art. 28, inciso XXVIII."
+            },
+            {
+                question: "Compete ao Presidente fixar, mediante Resolução, medidas de equalização para corrigir manifesta desproporção da carga de trabalho entre ministros e ministros-substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no tipo de ato normativo utilizado. O Art. 28, inciso XXVIII, especifica que a fixação se dará \"mediante Portaria\", e não Resolução."
+            },
+            {
+                question: "Compete ao Presidente fixar, mediante Portaria, medidas de equalização da carga de trabalho apenas entre os ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o alcance da medida. O Art. 28, inciso XXVIII, estabelece que a equalização deve ocorrer \"entre ministros e ministros-substitutos\"."
+            },
+            {
+                question: "Compete ao Presidente propor ao Plenário medidas de equalização para corrigir desproporção da carga de trabalho entre ministros.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. O Art. 28, inciso XXVIII, confere ao Presidente a competência para \"fixar\" (ato direto) as medidas, e não para \"propor ao Plenário\"."
+            },
+            {
+                question: "Compete ao Presidente submeter ao Plenário projeto de ato normativo fixando o valor de que trata o caput do art. 199.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para iniciar o processo de fixação do valor mencionado no art. 199, submetendo a proposta ao colegiado, conforme o Art. 28, inciso XXIX."
+            },
+            {
+                question: "Compete ao Presidente fixar diretamente, por Portaria, o valor de que trata o caput do art. 199.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em atribuir ao Presidente a competência para \"fixar diretamente\". O Art. 28, inciso XXIX, determina que a competência do Presidente é \"submeter ao Plenário\" o projeto de ato normativo."
+            },
+            {
+                question: "Compete ao Presidente submeter ao Plenário despacho simples fixando o valor de que trata o caput do art. 199.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no tipo de instrumento. O Art. 28, inciso XXIX, refere-se a um \"projeto de ato normativo\", e não a um \"despacho simples\"."
+            },
+            {
+                question: "Compete ao Presidente proceder à distribuição dos processos, mediante sorteio, nos termos dos arts. 147 a 155.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para realizar a distribuição de processos, o método padrão (sorteio) e a referência normativa, nos termos do Art. 28, inciso XXX."
+            },
+            {
+                question: "Compete ao Presidente proceder à distribuição dos processos, mediante livre escolha do relator.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no método de distribuição. O Art. 28, inciso XXX, estabelece que a distribuição se dá \"mediante sorteio\", e não por livre escolha."
+            },
+            {
+                question: "Compete ao Secretário-Geral das Sessões proceder à distribuição dos processos, mediante sorteio.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência à autoridade errada. O Art. 28, inciso XXX, define que compete \"ao Presidente\" proceder à distribuição."
+            },
+            {
+                question: "Compete ao Presidente assinar as deliberações do Plenário.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para chancelar as decisões do colegiado, conforme o Art. 28, inciso XXXI."
+            },
+            {
+                question: "Compete ao Presidente assinar as deliberações do Plenário e das Câmaras.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar a competência. O Art. 28, inciso XXXI, refere-se especificamente às deliberações \"do Plenário\". As deliberações das Câmaras são assinadas pelos seus respectivos presidentes."
+            },
+            {
+                question: "Compete ao Presidente aprovar as atas do Plenário, submetendo o ato para homologação na sessão ordinária subsequente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para aprovar as atas plenárias, ato este que fica sujeito à homologação posterior do colegiado, conforme o Art. 28, inciso XXXII."
+            },
+            {
+                question: "Compete ao Presidente homologar as atas do Plenário, que devem ser previamente aprovadas na sessão ordinária subsequente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na inversão dos atos. O Art. 28, inciso XXXII, estabelece que o Presidente primeiro \"aprova\" a ata e depois submete o ato para \"homologação\" do Plenário."
+            },
+            {
+                question: "Compete ao Plenário aprovar as atas do Plenário, cabendo ao Presidente apenas a sua homologação.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao inverter as competências. O Art. 28, inciso XXXII, define que compete \"ao Presidente\" aprovar a ata, e ao Plenário (na sessão subsequente) \"homologar\" esse ato."
+            },
+            {
+                question: "Compete ao Presidente efetuar as nomeações para cargos efetivos e em comissão e as designações para funções de confiança no quadro de pessoal da Secretaria do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para gerir o provimento de cargos e funções na Secretaria do Tribunal, nos termos do Art. 28, inciso XXXIII."
+            },
+            {
+                question: "Compete ao Presidente efetuar as exonerações e dispensas do quadro de pessoal da Secretaria do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e corresponde à parte final do Art. 28, inciso XXXIII, que trata da competência do Presidente para os atos de vacância de cargos e funções."
+            },
+            {
+                question: "Compete ao Presidente efetuar as nomeações para cargos em comissão, cabendo ao Plenário efetuar as nomeações para cargos efetivos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em dividir a competência. O Art. 28, inciso XXXIII, atribui ao Presidente a competência para efetuar as nomeações tanto para \"cargos efetivos\" quanto para \"cargos em comissão\"."
+            },
+            {
+                question: "Compete ao Presidente administrar os recursos humanos, materiais, tecnológicos, orçamentários e financeiros do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência geral de administração do Tribunal, atribuída ao Presidente pelo Art. 28, inciso XXXIV."
+            },
+            {
+                question: "Compete ao Presidente administrar os recursos orçamentários e financeiros do Tribunal, cabendo ao Plenário a administração dos recursos humanos, materiais e tecnológicos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em fragmentar a competência de administração. O Art. 28, inciso XXXIV, atribui ao Presidente a administração de todos os recursos (humanos, materiais, tecnológicos, orçamentários e financeiros)."
+            },
+            {
+                question: "Compete ao Secretário-Geral de Administração administrar os recursos humanos, materiais, tecnológicos, orçamentários e financeiros do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência à autoridade errada. Embora o Secretário-Geral auxilie, a competência máxima pela administração, conforme o Art. 28, inciso XXXIV, é \"do Presidente\"."
+            },
+            {
+                question: "Compete ao Presidente conceder aposentadoria a servidores do Tribunal, bem como pensão a seus beneficiários.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para conceder os benefícios previdenciários aos servidores do Tribunal e seus dependentes, nos termos do Art. 28, inciso XXXV."
+            },
+            {
+                question: "Compete ao Presidente conceder aposentadoria a servidores do Tribunal, cabendo ao Plenário a concessão de pensão a seus beneficiários.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em dividir a competência. O Art. 28, inciso XXXV, atribui ao Presidente a competência para conceder tanto a \"aposentadoria\" quanto a \"pensão\"."
+            },
+            {
+                question: "Compete ao Presidente conceder aposentadoria e pensão a ministros, ministros-substitutos e servidores do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ampliar o escopo. O Art. 28, inciso XXXV, refere-se à concessão de aposentadoria \"a servidores do Tribunal\". A aposentadoria de ministros segue rito próprio, equiparado ao de Ministro do STJ."
+            },
+            {
+                question: "Compete ao Presidente determinar, na forma prevista no art. 43, o início do processo de verificação de invalidez de ministro ou ministro‑substituto.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para iniciar o procedimento de verificação de invalidez de membros do Tribunal, conforme o Art. 28, inciso XXXVI."
+            },
+            {
+                question: "Compete ao Presidente determinar, independentemente da forma prevista no art. 43, o início do processo de verificação de invalidez de ministro ou ministro‑substituto.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em ignorar a condição imposta pela norma. O Art. 28, inciso XXXVI, estabelece que a determinação deve ocorrer \"na forma prevista no art. 43\"."
+            },
+            {
+                question: "Compete ao Plenário determinar o início do processo de verificação de invalidez de ministro ou ministro‑substituto.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao órgão errado. O Art. 28, inciso XXXVI, define que compete \"ao Presidente\" determinar o início desse processo."
+            },
+            {
+                question: "Compete ao Presidente nomear curador ao paciente, na hipótese de verificação de invalidez, quando se tratar de incapacidade mental.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para nomear um curador em caso de incapacidade mental, no contexto do inciso anterior (verificação de invalidez), conforme o Art. 28, inciso XXXVII."
+            },
+            {
+                question: "Compete ao Presidente nomear curador ao paciente em qualquer hipótese de verificação de invalidez, seja ela por incapacidade física ou mental.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em generalizar a hipótese. O Art. 28, inciso XXXVII, restringe a nomeação de curador aos casos em que se tratar de \"incapacidade mental\"."
+            },
+            {
+                question: "Compete ao Presidente nomear curador ao paciente, quando se tratar de incapacidade mental, bem assim praticar os demais atos preparatórios do procedimento.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal de toda a competência do Presidente no âmbito do procedimento de verificação de invalidez, conforme o Art. 28, inciso XXXVII."
+            },
+            {
+                question: "Compete ao Plenário nomear curador ao paciente, na hipótese de incapacidade mental.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao órgão errado. O Art. 28, inciso XXXVII, define que compete \"ao Presidente\" nomear o curador."
+            },
+            {
+                question: "Compete ao Presidente determinar a instauração de sindicância ou processo administrativo disciplinar.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde exatamente à primeira parte da competência disciplinar do Presidente, prevista no Art. 28, inciso XXXVIII."
+            },
+            {
+                question: "Compete ao Presidente aplicar as penalidades de demissão e de cassação de aposentadoria ou disponibilidade de servidor do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para aplicar as penalidades expulsórias aos servidores do Tribunal, conforme a segunda parte do Art. 28, inciso XXXVIII."
+            },
+            {
+                question: "Compete ao Presidente determinar a instauração de processo administrativo disciplinar, mas a aplicação da penalidade de demissão é de competência do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em dividir a competência. O Art. 28, inciso XXXVIII, atribui ao Presidente tanto a competência para \"determinar a instauração\" quanto para \"aplicar as penalidades de demissão\" e cassação."
+            },
+            {
+                question: "Compete ao Presidente aplicar as penalidades de advertência e suspensão, cabendo ao Plenário as penalidades de demissão e cassação.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na atribuição das penalidades. O Art. 28, inciso XXXVIII, especifica que compete ao Presidente aplicar as penalidades mais graves: \"demissão e de cassação de aposentadoria ou disponibilidade\"."
+            },
+            {
+                question: "Compete ao Presidente aprovar, anualmente, a programação financeira de desembolso do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para aprovar a programação financeira anual, nos termos do Art. 28, inciso XXXIX."
+            },
+            {
+                question: "Compete ao Presidente aprovar, mensalmente, a programação financeira de desembolso do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na periodicidade da aprovação. O Art. 28, inciso XXXIX, estabelece que a aprovação é \"anualmente\", e não \"mensalmente\"."
+            },
+            {
+                question: "Compete ao Plenário aprovar, anualmente, a programação financeira de desembolso do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao órgão errado. O Art. 28, inciso XXXIX, define que compete \"ao Presidente\" aprovar a programação financeira."
+            },
+            {
+                question: "Compete ao Presidente assinar os acordos de cooperação de que trata o art. 296.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para firmar os acordos de cooperação específicos mencionados no art. 296, conforme o Art. 28, inciso XL."
+            },
+            {
+                question: "Compete ao Presidente criar comissões temporárias e designar os seus membros.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente para criar comissões temporárias e nomear seus integrantes, conforme a primeira parte do Art. 28, inciso XLI."
+            },
+            {
+                question: "Compete ao Presidente designar os membros das comissões permanentes.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à parte final da competência prevista no Art. 28, inciso XLI, que também atribui ao Presidente a designação dos membros das comissões permanentes."
+            },
+            {
+                question: "Compete ao Presidente criar comissões temporárias e permanentes.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que o Presidente cria comissões permanentes. O Art. 28, inciso XLI, confere ao Presidente a competência para \"criar comissões temporárias\" e \"designar [...] os das comissões permanentes\" (que já existem regimentalmente), mas não para criar novas comissões permanentes."
+            },
+            {
+                question: "Compete ao Presidente apresentar ao Plenário, até 31 de março do ano subsequente, o relatório de sua gestão.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Presidente e o prazo limite para a apresentação do relatório de sua gestão ao Plenário, conforme o Art. 28, inciso XLII."
+            },
+            {
+                question: "Compete ao Presidente apresentar ao Plenário, até 31 de janeiro do ano subsequente, o relatório de sua gestão.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no prazo de apresentação do relatório. O Art. 28, inciso XLII, estabelece o prazo limite de \"31 de março\" para a apresentação, e não 31 de janeiro (que é o prazo para as unidades fornecerem os dados)."
+            },
+            {
+                question: "O relatório de gestão do Presidente deverá ser apresentado ao Plenário até 31 de março, com os dados fornecidos até 31 de dezembro pelas unidades da Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro reside no prazo para o fornecimento dos dados. O Art. 28, inciso XLII, especifica que os dados devem ser fornecidos \"até 31 de janeiro\", e não 31 de dezembro."
+            },
+            {
+                question: "Compete ao Presidente aprovar e fazer publicar o Relatório de Gestão Fiscal exigido pela Lei Complementar nº 101, de 4 de maio de 2000.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente em relação ao Relatório de Gestão Fiscal (LRF), conforme o Art. 28, inciso XLIII."
+            },
+            {
+                question: "Compete ao Presidente elaborar o Relatório de Gestão Fiscal e submetê-lo à aprovação do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está nos verbos utilizados. O Art. 28, inciso XLIII, confere ao Presidente a competência para \"aprovar e fazer publicar\" o relatório, e não para submetê-lo ao Plenário."
+            },
+            {
+                question: "Compete ao Presidente aprovar e fazer publicar o Relatório Anual de Atividades do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no nome do documento. O Art. 28, inciso XLIII, refere-se especificamente ao \"Relatório de Gestão Fiscal\" exigido pela LRF, e não ao Relatório Anual de Atividades (que é o relatório de gestão do inciso XLII)."
+            },
+            {
+                question: "Compete ao Presidente designar, na primeira sessão ordinária de cada ano, permitida a recondução, o ministro responsável por supervisionar a edição da Revista do Tribunal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve com exatidão o momento da designação, a possibilidade de recondução e a atribuição do ministro designado, nos termos do Art. 28, inciso XLIV."
+            },
+            {
+                question: "Compete ao Presidente designar, na última sessão ordinária de cada ano, o ministro responsável por supervisionar a edição da Revista do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no momento da designação. O Art. 28, inciso XLIV, estabelece que a designação ocorre \"na primeira sessão ordinária de cada ano\", e não na última."
+            },
+            {
+                question: "Compete ao Presidente designar o ministro responsável por supervisionar a edição da Revista do Tribunal, sendo vedada a recondução.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar a recondução. O Art. 28, inciso XLIV, é explícito ao afirmar que é \"permitida a recondução\"."
+            },
+            {
+                question: "O ministro responsável por supervisionar a edição da Revista do Tribunal será eleito pelo Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na forma de escolha. O Art. 28, inciso XLIV, estabelece que o ministro será \"designado\" pelo Presidente, e não eleito pelo Plenário."
+            },
+            {
+                question: "Compete ao Presidente designar ministro para exercer a função de Ministro-Ouvidor no Tribunal de Contas da União, para exercício por um ano civil, permitida a recondução.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Presidente para designar o Ministro-Ouvidor, o prazo de seu mandato e a possibilidade de recondução, conforme o Art. 28, inciso XLV."
+            },
+            {
+                question: "Compete ao Presidente designar ministro para exercer a função de Ministro-Ouvidor, para exercício por dois anos, vedada a recondução.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por dois motivos. Primeiro, o exercício da função é por \"um ano civil\", e não dois. Segundo, a recondução é \"permitida\", e não vedada, conforme o Art. 28, inciso XLV."
+            },
+            {
+                question: "O Ministro-Ouvidor no Tribunal de Contas da União será eleito pelo Plenário para um mandato de um ano civil.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no método de escolha. O Art. 28, inciso XLV, define que o Ministro-Ouvidor será \"designado\" pelo Presidente, e não eleito pelo Plenário."
+            },
+            {
+                question: "Compete ao Presidente designar ministro para exercer a função de Ministro-Ouvidor no Tribunal de Contas da União, sendo permitida apenas uma recondução.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em adicionar uma limitação que não existe na norma. O Art. 28, inciso XLV, afirma que é \"permitida a recondução\", sem limitar o número de vezes."
+            },
+            {
+                question: "Compete ao Presidente designar ministro para exercer a função de Ministro-Corregedor no Tribunal de Contas da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na função designada. O Art. 28, inciso XLV, refere-se à designação do \"Ministro-Ouvidor\". A função de Corregedor é exercida pelo Vice-Presidente do Tribunal."
+            },
+            {
+                question: "O Presidente poderá delegar as atribuições previstas nos incisos XIV, XVII, XX, XXIII, XXX, XXXIII a XXXV e XL do art. 28.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do § 1º do art. 28, que lista exatamente as atribuições presidenciais que podem ser objeto de delegação."
+            },
+            {
+                question: "O Presidente deverá delegar as atribuições previstas nos incisos XIV, XVII, XX, XXIII, XXX, XXXIII a XXXV e XL do art. 28.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na troca do verbo \"poderá\" (que indica uma faculdade) por \"deverá\" (que indica uma obrigação). O § 1º do art. 28 estabelece uma permissão, não um dever."
+            },
+            {
+                question: "Todas as atribuições do Presidente, listadas no art. 28, são delegáveis.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em generalizar a delegação. O § 1º do art. 28 apresenta um rol taxativo de atribuições que podem ser delegadas, o que significa que as demais competências (não listadas) são indelegáveis."
+            },
+            {
+                question: "A atribuição do Presidente para decidir as questões administrativas (inciso XIV) poderá ser delegada.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência do inciso XIV (decidir as questões administrativas) está expressamente incluída no rol de atribuições delegáveis, conforme o § 1º do art. 28."
+            },
+            {
+                question: "É indelegável a atribuição do Presidente para decidir sobre pedidos de vista e de cópia de peça de processo (inciso XVII).",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a atribuição é indelegável. O inciso XVII está expressamente listado no § 1º do art. 28 como uma das competências que o Presidente \"poderá delegar\"."
+            },
+            {
+                question: "O Presidente poderá delegar a atribuição de expedir certidões requeridas ao Tribunal na forma da lei (inciso XX).",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência do inciso XX (expedir certidões) está explicitamente mencionada no rol de atribuições delegáveis do § 1º do art. 28."
+            },
+            {
+                question: "A competência para expedir certidões requeridas ao Tribunal (inciso XX) deve ser exercida privativamente pelo Presidente, vedada a delegação.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em vedar a delegação. O § 1º do art. 28 autoriza expressamente a delegação da competência prevista no inciso XX."
+            },
+            {
+                question: "O Presidente poderá delegar a atribuição de expedir atos concernentes às relações jurídico‑funcionais dos ministros, ministros‑substitutos e membros do Ministério Público (inciso XXIII).",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência do inciso XXIII (expedir atos jurídico-funcionais) está incluída na lista de atribuições delegáveis do § 1º do art. 28."
+            },
+            {
+                question: "A competência para expedir atos concernentes às relações jurídico‑funcionais dos ministros (inciso XXIII) é indelegável.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar a indelegabilidade. O § 1º do art. 28 permite expressamente que o Presidente delegue a atribuição do inciso XXIII."
+            },
+            {
+                question: "A competência do Presidente para proceder à distribuição dos processos, mediante sorteio (inciso XXX), poderá ser delegada.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois o inciso XXX (distribuição de processos) é uma das atribuições que o Presidente \"poderá delegar\", conforme o § 1º do art. 28."
+            },
+            {
+                question: "O Presidente deverá exercer pessoalmente a atribuição de proceder à distribuição dos processos (inciso XXX), sendo vedada a delegação.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em vedar a delegação de uma competência que é expressamente listada como delegável no § 1º do art. 28."
+            },
+            {
+                question: "O Presidente poderá delegar a competência para efetuar as nomeações para cargos efetivos e em comissão (inciso XXXIII).",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência do inciso XXXIII (nomeações, designações, exonerações e dispensas) está prevista no rol de delegações autorizadas pelo § 1º do art. 28."
+            },
+            {
+                question: "É indelegável a competência do Presidente para efetuar as nomeações para cargos efetivos e em comissão e as designações para funções de confiança (inciso XXXIII).",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em afirmar que a competência é indelegável, quando o § 1º do art. 28 a inclui expressamente entre as atribuições que o Presidente \"poderá delegar\"."
+            },
+            {
+                question: "A atribuição do Presidente para administrar os recursos humanos, materiais, tecnológicos, orçamentários e financeiros do Tribunal (inciso XXXIV) é delegável.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência de administração geral do Tribunal (inciso XXXIV) está explicitamente listada como delegável no § 1º do art. 28."
+            },
+            {
+                question: "A administração dos recursos humanos e financeiros do Tribunal (inciso XXXIV) é de competência exclusiva e indelegável do Presidente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a competência é exclusiva e indelegável. O § 1º do art. 28 autoriza expressamente a delegação da competência prevista no inciso XXXIV."
+            },
+            {
+                question: "O Presidente poderá delegar a atribuição de conceder aposentadoria a servidores do Tribunal (inciso XXXV).",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência para conceder aposentadoria e pensão (inciso XXXV) está incluída no rol de atribuições delegáveis previsto no § 1º do art. 28."
+            },
+            {
+                question: "A competência para conceder aposentadoria a servidores do Tribunal (inciso XXXV) é indelegável, devendo ser exercida privativamente pelo Presidente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em vedar a delegação. O § 1º do art. 28 permite expressamente que o Presidente delegue a atribuição do inciso XXXV."
+            },
+            {
+                question: "A atribuição para assinar os acordos de cooperação de que trata o art. 296 (inciso XL) poderá ser delegada pelo Presidente.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a competência do inciso XL (assinar acordos de cooperação) é a última atribuição listada no rol de delegações autorizadas pelo § 1º do art. 28."
+            },
+            {
+                question: "É vedado ao Presidente delegar a atribuição de assinar os acordos de cooperação de que trata o art. 296 (inciso XL).",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em afirmar a vedação. O § 1º do art. 28 é explícito ao permitir que o Presidente delegue a atribuição prevista no inciso XL."
+            },
+            {
+                question: "O rol de atribuições delegáveis do Presidente, previsto no § 1º do art. 28, é exemplificativo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em classificar o rol como exemplificativo. Em direito administrativo, a delegação de competência é uma exceção e deve ser expressa. O § 1º do art. 28, ao listar especificamente os incisos, apresenta um rol taxativo (restrito) de atribuições delegáveis."
+            },
+            {
+                question: "Compete ao Presidente assinar a “Carteira de Identificação Funcional” dos servidores habilitados a exercerem funções específicas de controle externo no Tribunal de Contas da União, no exercício de cargo efetivo ou em comissão.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do § 2º do Art. 28, que define a competência do Presidente, o documento a ser assinado, os destinatários (servidores em função de controle externo) e os vínculos abrangidos (efetivo ou em comissão)."
+            },
+            {
+                question: "Compete ao Presidente assinar a “Carteira de Identificação Funcional” de todos os servidores do Tribunal de Contas da União, independentemente das funções exercidas.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em generalizar os destinatários. O § 2º do Art. 28 restringe a competência à assinatura da carteira funcional \"dos servidores habilitados a exercerem funções específicas de controle externo\", e não de todos os servidores."
+            },
+            {
+                question: "Compete ao Secretário-Geral de Administração assinar a “Carteira de Identificação Funcional” dos servidores habilitados a exercerem funções específicas de controle externo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência à autoridade errada. O § 2º do Art. 28 é claro ao determinar que compete \"ao Presidente\" assinar a referida carteira funcional."
+            },
+            {
+                question: "Em caráter excepcional e havendo urgência, o Presidente poderá decidir sobre matéria da competência do Tribunal, submetendo o ato à homologação do Plenário na próxima sessão ordinária.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do Art. 29, que estabelece a competência excepcional do Presidente para decidir matérias do Tribunal em casos urgentes, condicionada à homologação posterior do Plenário."
+            },
+            {
+                question: "Em caráter excepcional e havendo urgência, o Presidente deverá decidir sobre matéria da competência do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na troca do verbo \"poderá\" (que indica uma faculdade) por \"deverá\" (que indica uma obrigação). O Art. 29 confere ao Presidente uma permissão, não um dever."
+            },
+            {
+                question: "Em caráter excepcional e havendo urgência, o Presidente poderá decidir sobre matéria da competência do Tribunal, independentemente de homologação posterior.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em remover a condição de eficácia do ato. O Art. 29 exige que o Presidente, ao decidir excepcionalmente, submeta \"o ato à homologação do Plenário na próxima sessão ordinária\"."
+            },
+            {
+                question: "Dos atos e das decisões administrativas do Presidente caberá recurso ao Plenário.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a regra de recorribilidade dos atos administrativos praticados pelo Presidente, indicando o órgão competente para julgar o recurso, conforme o Art. 30, caput."
+            },
+            {
+                question: "Dos atos e das decisões administrativas do Presidente caberá recurso à Câmara a que pertencer o interessado.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no órgão destinatário do recurso. O Art. 30, caput, estabelece que o recurso contra atos administrativos do Presidente será dirigido \"ao Plenário\", e não às Câmaras."
+            },
+            {
+                question: "Apenas das decisões administrativas do Presidente caberá recurso ao Plenário, excluindo-se os demais atos de gestão.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em restringir o objeto do recurso. O Art. 30, caput, é claro ao afirmar que caberá recurso \"Dos atos e das decisões administrativas\", abrangendo ambos."
+            },
+            {
+                question: "O recurso administrativo de que trata o caput do Art. 30 será regulado, no que couber, pela Lei Geral do Processo Administrativo.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois indica com precisão a norma de aplicação subsidiária (Lei Geral do Processo Administrativo) para regular o recurso administrativo, conforme o Art. 30, parágrafo único."
+            },
+            {
+                question: "O recurso administrativo contra atos do Presidente será regulado exclusivamente por este Regimento Interno.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em excluir a aplicação de outra norma. O Art. 30, parágrafo único, determina que o recurso será regulado também, \"no que couber, pela Lei Geral do Processo Administrativo\"."
+            },
+            {
+                question: "O recurso administrativo de que trata o caput do Art. 30 será regulado integralmente pela Lei Geral do Processo Administrativo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no termo \"integralmente\". O Art. 30, parágrafo único, estabelece que a referida lei será aplicada \"no que couber\", indicando uma aplicação subsidiária, e não integral."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>

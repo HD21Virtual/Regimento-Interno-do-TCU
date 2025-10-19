@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competência do Vice-Presidente</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Competência do Vice-Presidente</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Compete ao Vice‑Presidente substituir o Presidente em suas ausências e impedimentos por motivo de licença, férias ou outro afastamento legal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da primeira parte da competência de substituição do Vice-Presidente, conforme o Art. 31, inciso I."
+            },
+            {
+                question: "Compete ao Vice‑Presidente substituir o Presidente em suas ausências e impedimentos, exceto nos casos de licença ou férias.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em criar uma exceção que não existe. O Art. 31, inciso I, é explícito ao incluir \"licença, férias ou outro afastamento legal\" como motivos para a substituição."
+            },
+            {
+                question: "Compete ao Vice‑Presidente sucedê‑lo, no caso de vaga, na hipótese prevista no § 2º do art. 24.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Vice-Presidente para a sucessão em caso de vaga, fazendo a correta remissão à hipótese legal, conforme a parte final do Art. 31, inciso I."
+            },
+            {
+                question: "Compete ao Vice‑Presidente sucedê‑lo em caso de vaga, independentemente de qualquer hipótese prevista no art. 24.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em ignorar a condição imposta pela norma. O Art. 31, inciso I, restringe a sucessão \"na hipótese prevista no § 2º do art. 24\"."
+            },
+            {
+                question: "Em caso de vaga na Presidência, a qualquer tempo, o Vice-Presidente assumirá o cargo, mas uma nova eleição deverá ser realizada.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O Art. 31, inciso I, remete ao § 2º do art. 24, que trata da hipótese de vaga nos últimos sessenta dias do mandato, caso em que não haverá nova eleição, e o Vice-Presidente apenas sucede no período restante."
+            },
+            {
+                question: "Compete ao Vice‑Presidente presidir uma das câmaras.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Vice-Presidente, conforme o Art. 31, inciso II."
+            },
+            {
+                question: "Compete ao Vice‑Presidente presidir as duas câmaras do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em ampliar a competência. O Art. 31, inciso II, estabelece que o Vice-Presidente deve presidir \"uma das câmaras\", e não as duas."
+            },
+            {
+                question: "Compete ao Vice‑Presidente presidir o Plenário do Tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência errada. O Art. 31, inciso II, define que ele preside \"uma das câmaras\". A presidência do Plenário compete ao Presidente (Art. 28, VI)."
+            },
+            {
+                question: "Compete ao Vice‑Presidente exercer as funções de Corregedor.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Vice-Presidente para atuar como Corregedor do Tribunal, nos termos do Art. 31, inciso III."
+            },
+            {
+                question: "Compete ao Vice‑Presidente supervisionar as funções do Corregedor, que será um ministro eleito especificamente para esse fim.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em dissociar as funções. O Art. 31, inciso III, estabelece que o próprio Vice-Presidente \"exerce\" as funções de Corregedor; ele não supervisiona outro ministro."
+            },
+            {
+                question: "Compete ao Ministro mais antigo exercer as funções de Corregedor.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em atribuir a competência à autoridade errada. O Art. 31, inciso III, define que compete \"ao Vice-Presidente\" exercer as funções de Corregedor."
+            },
+            {
+                question: "Compete ao Vice‑Presidente colaborar com o Presidente no exercício de suas funções, quando solicitado.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência de colaboração do Vice-Presidente, que é condicionada à solicitação do Presidente, conforme o Art. 31, inciso V."
+            },
+            {
+                question: "Compete ao Vice‑Presidente colaborar com o Presidente no exercício de suas funções, independentemente de solicitação.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em remover a condição para a colaboração. O Art. 31, inciso V, é claro ao estabelecer que a colaboração ocorre \"quando solicitado\"."
+            },
+            {
+                question: "Compete ao Vice‑Presidente fiscalizar o Presidente no exercício de suas funções.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na troca do verbo. A competência do Vice-Presidente, conforme o Art. 31, inciso V, é de \"colaborar\", e não de \"fiscalizar\" o Presidente."
+            },
+            {
+                question: "Compete ao Vice‑Presidente substituir o Presidente em suas ausências, mas compete ao Ministro mais antigo sucedê-lo em caso de vaga.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em dividir as competências de forma equivocada. O Art. 31, inciso I, atribui ao Vice-Presidente tanto a competência para \"substituir\" quanto para \"suceder\" o Presidente."
+            },
+            {
+                question: "As atribuições descritas no Art. 32 incumbem ao Vice‑Presidente, no exercício das funções de Corregedor.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma paráfrase fiel do caput do Art. 32, que estabelece que as competências listadas são exercidas pelo Vice-Presidente quando este atua como Corregedor."
+            },
+            {
+                question: "As atribuições descritas no Art. 32 incumbem ao Ministro mais antigo, no exercício das funções de Corregedor.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em atribuir as funções de Corregedor ao Ministro mais antigo. O caput do Art. 32 é claro ao determinar que tais incumbências são \"do Vice-Presidente\"."
+            },
+            {
+                question: "Incumbe ao Vice-Presidente, como Corregedor, exercer os encargos de inspeção e correição geral permanentes.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Corregedor, conforme o Art. 32, inciso I."
+            },
+            {
+                question: "Incumbe ao Vice-Presidente, como Corregedor, exercer os encargos de inspeção e correição geral de caráter eventual.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na troca da natureza dos encargos. O Art. 32, inciso I, estabelece que os encargos de inspeção e correição são \"permanentes\", e não eventuais."
+            },
+            {
+                question: "Incumbe ao Corregedor exercer os encargos de inspeção, sendo os de correição geral de competência do Plenário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em dividir a competência. O Art. 32, inciso I, atribui ao Corregedor ambos os encargos, de \"inspeção e correição geral\"."
+            },
+            {
+                question: "Incumbe ao Corregedor relatar os processos administrativos referentes a deveres dos ministros e ministros‑substitutos do Tribunal e dos servidores da Secretaria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência do Corregedor para relatar processos disciplinares ou administrativos relativos a todos os membros e servidores do Tribunal, nos termos do Art. 32, inciso II."
+            },
+            {
+                question: "Incumbe ao Corregedor julgar os processos administrativos referentes a deveres dos ministros e ministros‑substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no verbo utilizado. A competência do Corregedor, segundo o Art. 32, inciso II, é de \"relatar\" os processos, e não de julgá-los monocraticamente."
+            },
+            {
+                question: "A competência do Corregedor para relatar processos administrativos referentes a deveres limita-se aos servidores da Secretaria, excluindo-se ministros e ministros-substitutos.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste em excluir autoridades da competência do Corregedor. O Art. 32, inciso II, é explícito ao incluir \"ministros e ministros-substitutos\" no escopo da atribuição."
+            },
+            {
+                question: "Incumbe ao Corregedor relatar os processos judiciais referentes a deveres dos ministros e servidores da Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está na natureza do processo. O Art. 32, inciso II, refere-se a \"processos administrativos\", e não \"judiciais\"."
+            },
+            {
+                question: "Incumbe ao Corregedor auxiliar o Presidente nas funções de fiscalização e supervisão da ordem e da disciplina do Tribunal e de sua Secretaria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da competência do Corregedor para atuar em conjunto com o Presidente na manutenção da ordem e disciplina internas, conforme o Art. 32, inciso III."
+            },
+            {
+                question: "Incumbe ao Corregedor fiscalizar e supervisionar, de forma exclusiva, a ordem e a disciplina do Tribunal e de sua Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em afirmar que a função é exclusiva. O Art. 32, inciso III, estabelece que a função do Corregedor é de \"auxiliar o Presidente\" nessas funções, indicando uma competência concorrente ou de auxílio."
+            },
+            {
+                question: "Incumbe ao Corregedor auxiliar o Presidente nas funções de fiscalização e supervisão da ordem e da disciplina apenas do Tribunal, excluindo-se a Secretaria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está em restringir o âmbito da fiscalização. O Art. 32, inciso III, é claro ao incluir \"o Tribunal e de sua Secretaria\"."
+            },
+            {
+                question: "Incumbe ao Corregedor apresentar ao Plenário, até a última sessão do mês de fevereiro do ano subsequente, relatório das atividades da Corregedoria.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a obrigação de prestação de contas do Corregedor, o destinatário (Plenário) e o prazo limite, nos termos do Art. 32, inciso IV."
+            },
+            {
+                question: "Incumbe ao Corregedor apresentar ao Presidente, até a última sessão do mês de fevereiro do ano subsequente, relatório das atividades da Corregedoria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro está no destinatário do relatório. O Art. 32, inciso IV, determina que o relatório deve ser apresentado \"ao Plenário\", e não ao Presidente."
+            },
+            {
+                question: "Incumbe ao Corregedor apresentar ao Plenário, até a última sessão do mês de março do ano subsequente, relatório das atividades da Corregedoria.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O erro consiste na alteração do prazo. O Art. 32, inciso IV, estabelece como prazo limite \"a última sessão do mês de fevereiro\", e não de março."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
