@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ministros</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Regimento Interno do TCU</h1>
+            <p>Ministros</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Os ministros do Tribunal de Contas da União são em número de nove.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da primeira parte do Art. 34, caput."
+            },
+            {
+                question: "Os ministros do Tribunal de Contas da União serão nomeados pelo Congresso Nacional.",
+                answer: "Errado",
+                rationale: "Errado. Conforme o Art. 34, caput, os ministros \"serão nomeados pelo Presidente da República\"."
+            },
+            {
+                question: "A nomeação dos ministros do Tribunal de Contas da União independe da observância de requisitos constitucionais.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 34, caput, estabelece expressamente que os ministros serão nomeados \"observados os requisitos constitucionais\"."
+            },
+            {
+                question: "Um terço dos ministros será escolhido pelo Presidente da República, com aprovação do Senado Federal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está em conformidade com a primeira parte do Art. 34, Inciso I."
+            },
+            {
+                question: "Da cota de um terço do Presidente da República, dois ministros serão escolhidos alternadamente entre ministros-substitutos e membros do Ministério Público junto ao Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do trecho intermediário do Art. 34, Inciso I."
+            },
+            {
+                question: "Os ministros-substitutos e membros do Ministério Público junto ao Tribunal serão indicados em lista tríplice pelo Plenário.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde exatamente ao disposto no Art. 34, Inciso I, sobre a forma de indicação."
+            },
+            {
+                question: "A indicação em lista tríplice pelo Plenário seguirá apenas o critério de antiguidade.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 34, Inciso I, estabelece que a indicação seguirá \"os critérios de antiguidade e merecimento\"."
+            },
+            {
+                question: "Dois terços dos ministros do Tribunal de Contas da União serão escolhidos pelo Presidente da República.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 34, Inciso II, atribui a escolha de dois terços \"pelo Congresso Nacional\". O Presidente da República escolhe um terço (Inciso I)."
+            },
+            {
+                question: "Compete ao Congresso Nacional a escolha de dois terços dos ministros do Tribunal de Contas da União.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a exata redação da competência estabelecida no Art. 34, Inciso II."
+            },
+            {
+                question: "Metade dos ministros do TCU será escolhida pelo Presidente da República e metade pelo Congresso Nacional.",
+                answer: "Errado",
+                rationale: "Errado. A divisão estabelecida pelo Art. 34 não é metade (1/2) para cada, mas sim um terço (1/3) pelo Presidente (Inciso I) e dois terços (2/3) pelo Congresso (Inciso II)."
+            },
+            {
+                question: "Em caso de vacância, a competência para a escolha de ministro do Tribunal de Contas da União será definida de modo que mantenha a composição mencionada no artigo anterior.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do disposto no Art. 35."
+            },
+            {
+                question: "Em caso de vacância, a competência para a escolha de ministro do Tribunal de Contas da União será definida independentemente da composição mencionada no artigo anterior.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 35 determina que a competência será definida \"de modo que mantenha\" a composição anterior, e não de forma independente."
+            },
+            {
+                question: "Ocorrendo vaga de cargo de ministro a ser provida por ministro‑substituto ou por membro do Ministério Público junto ao Tribunal, o Presidente convocará sessão extraordinária.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à primeira parte do Art. 36, caput."
+            },
+            {
+                question: "Ocorrendo vaga de cargo de ministro a ser provida por ministro‑substituto, o Presidente convocará sessão ordinária para que o Plenário delibere sobre a respectiva lista tríplice.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, caput, determina que o Presidente convocará \"sessão extraordinária\", e não ordinária."
+            },
+            {
+                question: "A convocação da sessão extraordinária pelo Presidente, para que o Plenário delibere sobre a lista tríplice, deve ocorrer dentro do prazo de quinze dias, contado da data da ocorrência da vaga.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a parte final do Art. 36, caput."
+            },
+            {
+                question: "O prazo para o Plenário deliberar sobre a respectiva lista tríplice é de trinta dias, contado da data da ocorrência da vaga.",
+                answer: "Errado",
+                rationale: "Errado. Conforme o Art. 36, caput, o prazo é de \"quinze dias\", e não trinta."
+            },
+            {
+                question: "O quórum para deliberar sobre a lista a que se refere o caput do Art. 36 será de, pelo menos, cinco ministros, incluindo o que presidir o ato.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a exata redação do Art. 36, § 1º."
+            },
+            {
+                question: "O quórum para deliberar sobre a lista tríplice será de, pelo menos, cinco ministros, excluindo-se o que presidir o ato.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 1º, estabelece que o quórum de cinco ministros deve \"incluindo\" o presidente do ato, e não o excluindo."
+            },
+            {
+                question: "A lista tríplice obedecerá, alternadamente, ao critério de antiguidade e de merecimento.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 36, § 2º."
+            },
+            {
+                question: "A lista tríplice obedecerá, cumulativamente, aos critérios de antiguidade e de merecimento.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 2º, afirma que os critérios serão usados \"alternadamente\", e não cumulativamente."
+            },
+            {
+                question: "Quando o preenchimento da vaga deva obedecer ao critério de antiguidade, caberá ao Presidente elaborar a lista tríplice, no caso de vaga a ser provida por ministro‑substituto.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está em conformidade com a primeira parte do Art. 36, § 3º."
+            },
+            {
+                question: "Quando o preenchimento da vaga deva obedecer ao critério de antiguidade, caberá ao Procurador‑Geral elaborar a lista tríplice, se o provimento for destinado a membro do Ministério Público.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a parte intermediária do Art. 36, § 3º."
+            },
+            {
+                question: "Quando o preenchimento da vaga obedecer ao critério de antiguidade, caberá ao Presidente elaborar a lista tríplice, se o provimento for destinado a membro do Ministério Público.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva inverte as competências. De acordo com o Art. 36, § 3º, se a vaga por antiguidade for destinada a membro do MP, a lista caberá ao \"Procurador-Geral\", e não ao Presidente."
+            },
+            {
+                question: "Quando o preenchimento da vaga obedecer ao critério de merecimento, caberá ao Presidente elaborar a lista tríplice, no caso de vaga a ser provida por ministro-substituto.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 3º, trata especificamente de quando o preenchimento \"deva obedecer ao critério de antiguidade\", e não ao de merecimento."
+            },
+            {
+                question: "A lista tríplice elaborada pelo Presidente ou pelo Procurador-Geral, no critério de antiguidade, deve ser submetida ao Plenário.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à parte final do Art. 36, § 3º (\"a ser submetida ao Plenário\")."
+            },
+            {
+                question: "No caso de vaga a ser preenchida segundo o critério de merecimento, o Presidente apresentará ao Plenário, conforme o caso, a lista dos nomes dos ministros-substitutos ou dos membros do Ministério Público que possuam os requisitos constitucionais.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da primeira parte do Art. 36, § 4º."
+            },
+            {
+                question: "No caso de vaga a ser preenchida segundo o critério de antiguidade, o Presidente apresentará ao Plenário a lista dos nomes dos ministros-substitutos que possuam os requisitos constitucionais.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 4º, trata especificamente da vaga a ser preenchida \"segundo o critério de merecimento\", e não de antiguidade."
+            },
+            {
+                question: "No caso de vaga por merecimento, cabe ao Procurador-Geral elaborar lista sêxtupla para os fins de formação da lista tríplice pelo Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde exatamente à parte final do Art. 36, § 4º."
+            },
+            {
+                question: "No caso de vaga por merecimento, cabe ao Presidente elaborar lista sêxtupla para os fins de formação da lista tríplice pelo Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. Conforme o Art. 36, § 4º, a elaboração da lista sêxtupla cabe \"ao Procurador-Geral\", e não ao Presidente."
+            },
+            {
+                question: "No caso de vaga por merecimento, cabe ao Procurador-Geral elaborar lista tríplice para os fins de formação da lista tríplice pelo Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 4º, estabelece que o Procurador-Geral elaborará \"lista sêxtupla\", e não uma lista tríplice."
+            },
+            {
+                question: "Cada ministro escolherá três nomes, se houver, de ministros-substitutos ou de membros do Ministério Público.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma reprodução literal do Art. 36, § 5º."
+            },
+            {
+                question: "Cada ministro escolherá seis nomes de ministros-substitutos ou de membros do Ministério Público.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 5º, estipula que cada ministro escolherá \"três nomes\", e não seis."
+            },
+            {
+                question: "A escolha de três nomes por cada ministro independe da quantidade de candidatos, não se aplicando a expressão \"se houver\".",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 5º, utiliza expressamente o termo \"se houver\", indicando que a escolha dos três nomes depende da existência de candidatos."
+            },
+            {
+                question: "O Presidente chamará, na ordem de antiguidade, os ministros, que colocarão na urna os votos contidos em invólucro fechado.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 36, § 6º."
+            },
+            {
+                question: "O Presidente chamará, em ordem aleatória, os ministros para colocarem os votos na urna.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 6º, determina que o chamamento ocorrerá \"na ordem de antiguidade\", e não em ordem aleatória."
+            },
+            {
+                question: "Os ministros colocarão na urna os votos contidos em invólucro aberto.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 6º, especifica que os votos estarão contidos \"em invólucro fechado\"."
+            },
+            {
+                question: "Os três nomes mais votados, se houver, constarão da lista tríplice.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à primeira parte do Art. 36, § 7º."
+            },
+            {
+                question: "A lista tríplice com os três nomes mais votados será encaminhada ao Presidente da República.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a parte final do Art. 36, § 7º."
+            },
+            {
+                question: "Os seis nomes mais votados constarão da lista tríplice a ser encaminhada ao Presidente da República.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 7º, refere-se aos \"três nomes mais votados\", e não seis."
+            },
+            {
+                question: "Os três nomes mais votados constarão da lista tríplice a ser encaminhada ao Congresso Nacional.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 36, § 7º, determina que a lista tríplice será encaminhada \"ao Presidente da República\", e não ao Congresso Nacional."
+            },
+            {
+                question: "Os ministros têm prazo de trinta dias, a partir da publicação do ato de nomeação no Diário Oficial da União, para posse e exercício no cargo.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a primeira parte do Art. 37, que define o prazo inicial de trinta dias."
+            },
+            {
+                question: "O prazo para posse e exercício dos ministros é de sessenta dias, a partir da publicação do ato de nomeação no Diário Oficial da União.",
+                answer: "Errado",
+                rationale: "Errado. O prazo regular, conforme o Art. 37, é de \"trinta dias\". Sessenta dias é o prazo máximo da prorrogação."
+            },
+            {
+                question: "O prazo de trinta dias para posse e exercício dos ministros é prorrogável por mais sessenta dias, no máximo.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma extração literal da parte intermediária do Art. 37."
+            },
+            {
+                question: "O prazo de trinta dias para posse e exercício dos ministros é prorrogável por mais trinta dias, no máximo.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 37 estabelece que a prorrogação é de \"mais sessenta dias, no máximo\", e não trinta."
+            },
+            {
+                question: "A prorrogação do prazo para posse e exercício do cargo de ministro independe de solicitação.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 37 condiciona a prorrogação à existência de \"solicitação escrita\"."
+            },
+            {
+                question: "A prorrogação do prazo para posse e exercício do cargo de ministro exige solicitação escrita.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está em conformidade com o requisito estabelecido no Art. 37."
+            },
+            {
+                question: "Os ministros tomam posse em sessão ordinária do Plenário.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 38, caput, especifica que a posse ocorre \"em sessão extraordinária do Plenário\"."
+            },
+            {
+                question: "Os ministros tomam posse em sessão extraordinária do Plenário.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a regra geral estabelecida no Art. 38, caput."
+            },
+            {
+                question: "Os ministros podem tomar posse perante o Presidente, em período de recesso.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde exatamente à exceção prevista na parte final do Art. 38, caput."
+            },
+            {
+                question: "Mesmo em período de recesso, o ministro só poderá tomar posse perante o Plenário.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria o Art. 38, caput, que autoriza a posse \"perante o Presidente, em período de recesso\"."
+            },
+            {
+                question: "No ato de posse, o ministro prestará compromisso em termos idênticos aos constantes do compromisso prestado pelo Presidente e Vice-Presidente.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva obedece ao Art. 38, § 1º, e aplica a regra de remissão, substituindo a menção ao \"§ 1º do art. 26\" pelo seu assunto principal (o compromisso do Presidente e Vice-Presidente)."
+            },
+            {
+                question: "No ato de posse, o ministro prestará compromisso em termos diversos daqueles constantes do compromisso prestado pelo Presidente e Vice-Presidente.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 38, § 1º, estabelece que o compromisso será em termos \"idênticos\" ao do compromisso prestado pelo Presidente e Vice-Presidente (referência ao § 1º do art. 26), e não diversos."
+            },
+            {
+                question: "Será lavrado pelo Secretário-Geral da Presidência, em livro próprio, o termo de posse do ministro.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 38, § 2º, atribui a lavratura ao \"dirigente da unidade administrativa competente da Secretaria do Tribunal\", e não ao Secretário-Geral da Presidência."
+            },
+            {
+                question: "Será lavrado pelo dirigente da unidade administrativa competente da Secretaria do Tribunal o termo de posse do ministro.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com o Art. 38, § 2º."
+            },
+            {
+                question: "O termo de posse do ministro será lavrado em livro próprio pelo dirigente da unidade administrativa competente da Secretaria do Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 38, § 2º, mantendo todos os elementos (quem lava, o que é lavrado e onde é lavrado)."
+            },
+            {
+                question: "Ao ministro do Tribunal é permitido o exercício de qualquer atividade paralela, desde que não haja conflito de interesses.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, caput, estabelece que \"É vedado ao ministro do Tribunal\" o exercício de diversas atividades listadas em seus incisos, sendo a vedação a regra."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal exercer, ainda que em disponibilidade, outro cargo ou função, salvo uma de magistério.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 39, Inciso I."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal exercer outro cargo ou função, desde que esteja em disponibilidade.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, Inciso I, veda o exercício de outro cargo ou função \"ainda que em disponibilidade\"."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal exercer mais de um cargo ou função de magistério, concomitantemente às suas funções no Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. A exceção prevista no Art. 39, Inciso I, limita-se a \"uma de magistério\", e não várias."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal exercer cargo técnico ou de direção de sociedade civil, associação ou fundação, de qualquer natureza ou finalidade.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva está incompleta, pois omite a exceção. O Art. 39, Inciso II, permite o exercício de cargo em \"associação de classe, sem remuneração\"."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal exercer cargo de direção de associação de classe, desde que sem remuneração.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde exatamente à exceção prevista na parte final do Art. 39, Inciso II."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal exercer cargo técnico de fundação de qualquer finalidade, mesmo que sem remuneração.",
+                answer: "Certo",
+                rationale: "Correto. O Art. 39, Inciso II, proíbe o exercício de cargo técnico em fundações. A exceção \"sem remuneração\" aplica-se apenas a \"associação de classe\"."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal exercer comissão remunerada ou não, mesmo em órgãos de controle da administração pública direta ou indireta.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma extração literal da primeira parte do Art. 39, Inciso III."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal exercer comissão não remunerada em concessionárias de serviço público.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, Inciso III, veda o exercício de comissão \"remunerada ou não\", inclusive \"em concessionárias de serviço público\"."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal exercer profissão liberal, emprego particular ou comércio.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à primeira parte da vedação contida no Art. 39, Inciso IV."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal participar de sociedade comercial, exceto como acionista ou cotista sem ingerência.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel da segunda parte do Art. 39, Inciso IV, incluindo sua exceção."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal participar de sociedade comercial como cotista, mesmo que possua ingerência na administração.",
+                answer: "Errado",
+                rationale: "Errado. A exceção prevista no Art. 39, Inciso IV, é clara ao permitir a participação apenas \"sem ingerência\"."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal celebrar contrato com pessoa jurídica de direito público, empresa pública ou sociedade de economia mista, em qualquer hipótese.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, Inciso V, estabelece uma exceção: \"salvo quando o contrato obedecer a normas uniformes para todo e qualquer contratante\"."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal celebrar contrato com fundação, sociedade instituída e mantida pelo poder público ou empresa concessionária de serviço público.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva omite a exceção prevista na parte final do Art. 39, Inciso V, que permite o contrato se este obedecer a normas uniformes (ex: um contrato de adesão)."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal celebrar contrato com empresa concessionária de serviço público, quando o contrato obedecer a normas uniformes para todo e qualquer contratante.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva descreve exatamente a exceção prevista na parte final do Art. 39, Inciso V."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal dedicar-se à atividade político-partidária.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da vedação constante no Art. 39, Inciso VI."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal manifestar, por qualquer meio de comunicação, opinião sobre processo pendente de julgamento, seu ou de outrem.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a primeira vedação estabelecida no Art. 39, Inciso VII."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal emitir juízo depreciativo sobre despachos, votos ou sentenças de órgãos judiciais.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a segunda vedação estabelecida no Art. 39, Inciso VII."
+            },
+            {
+                question: "A vedação ao ministro do Tribunal de emitir juízo depreciativo sobre sentenças de órgãos judiciais é absoluta, não admitindo exceções.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, Inciso VII, em sua parte final, estabelece exceções, permitindo a crítica \"nos autos e em obras técnicas ou no exercício de magistério\"."
+            },
+            {
+                question: "É permitido ao ministro do Tribunal emitir juízo depreciativo sobre votos de órgãos judiciais, desde que o faça no exercício de magistério.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva descreve uma das exceções (\"ressalvada\") previstas na parte final do Art. 39, Inciso VII."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo de interesse próprio, de cônjuge, ou de parente consanguíneo ou afim, na linha reta ou na colateral, até o segundo grau.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel da primeira parte do Art. 39, Inciso VIII."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo de interesse de parente consanguíneo ou afim, na linha colateral, até o terceiro grau.",
+                answer: "Errado",
+                rationale: "Errado. A vedação referente a parentes, conforme o Art. 39, Inciso VIII, limita-se \"até o segundo grau\", e não o terceiro."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo de interesse de amigo íntimo ou inimigo capital.",
+                answer: "Certo",
+                rationale: "Correto. Esta vedação consta expressamente na parte intermediária do Art. 39, Inciso VIII."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo em que tenha funcionado como advogado, perito ou representante do Ministério Público.",
+                answer: "Certo",
+                rationale: "Correto. Esta vedação consta na parte final do Art. 39, Inciso VIII."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo em que tenha funcionado como servidor da Secretaria do Tribunal ou do Controle Interno.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a vedação que conclui o Art. 39, Inciso VIII."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo quando nele estiver postulando, como advogado da parte, o seu cônjuge.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à primeira hipótese de impedimento listada no Art. 39, Inciso IX."
+            },
+            {
+                question: "É vedado ao ministro do Tribunal atuar em processo quando nele estiver postulando, como advogado da parte, qualquer parente seu, consanguíneo ou afim, em linha reta ou colateral, até o terceiro grau.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, Inciso IX, assim como o Inciso VIII, limita o impedimento por parentesco \"até o segundo grau\"."
+            },
+            {
+                question: "No caso de atuação de cônjuge ou parente como advogado (Inciso IX), o impedimento do ministro só se verifica quando o advogado já estava exercendo o patrocínio da causa.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a regra estabelecida na primeira parte do Art. 39, § 1º."
+            },
+            {
+                question: "O impedimento do ministro se verifica mesmo se o advogado (cônjuge ou parente) pleitear no processo com o fim de criar o referido impedimento.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, § 1º, veda essa manobra (\"é, porém, vedado ao advogado pleitear no processo, a fim de criar o impedimento do ministro\") e estabelece que o impedimento só ocorre se o advogado \"já estava exercendo o patrocínio\"."
+            },
+            {
+                question: "É permitido ao advogado, cônjuge de um ministro, pleitear em processo a fim de criar o impedimento do referido ministro.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 39, § 1º, veda expressamente essa conduta (\"é, porém, vedado ao advogado pleitear no processo, a fim de criar o impedimento do ministro\")."
+            },
+            {
+                question: "Não podem ocupar, simultaneamente, cargos de ministro, parentes consanguíneos ou afins, na linha reta ou na colateral, até o segundo grau.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da vedação estabelecida no Art. 40, caput."
+            },
+            {
+                question: "Podem ocupar, simultaneamente, cargos de ministro, parentes consanguíneos na linha reta, até o segundo grau.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 40, caput, veda expressamente (\"Não podem ocupar\") a situação descrita."
+            },
+            {
+                question: "A vedação à ocupação simultânea de cargos de ministro por parentes limita-se àqueles na linha reta, até o segundo grau.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 40, caput, inclui tanto a \"linha reta ou na colateral\"."
+            },
+            {
+                question: "A vedação à ocupação simultânea de cargos de ministro aplica-se a parentes consanguíneos ou afins até o terceiro grau.",
+                answer: "Errado",
+                rationale: "Errado. O limite de parentesco estabelecido no Art. 40, caput, é \"até o segundo grau\"."
+            },
+            {
+                question: "A incompatibilidade decorrente do parentesco entre ministros é uma situação que não possui resolução prevista em lei.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 40, Parágrafo único, introduz as formas pelas quais \"A incompatibilidade resolve-se\"."
+            },
+            {
+                question: "A incompatibilidade decorrente do parentesco resolve-se, antes da posse, contra o último nomeado.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a primeira regra de resolução prevista no Art. 40, Parágrafo único, Inciso I."
+            },
+            {
+                question: "Antes da posse, caso os ministros parentes sejam nomeados na mesma data, a incompatibilidade resolve-se contra o mais moço.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a segunda regra de resolução (critério de desempate) prevista no Art. 40, Parágrafo único, Inciso I."
+            },
+            {
+                question: "Antes da posse, se nomeados na mesma data, a incompatibilidade resolve-se contra o mais velho.",
+                answer: "Errado",
+                rationale: "Errado. O critério definido pelo Art. 40, Parágrafo único, Inciso I, é \"contra o mais moço\"."
+            },
+            {
+                question: "Antes da posse, a incompatibilidade resolve-se contra o que lhe deu causa.",
+                answer: "Errado",
+                rationale: "Errado. O critério \"contra o que lhe deu causa\" aplica-se \"depois da posse\" (Inciso II), e não antes da posse (Inciso I)."
+            },
+            {
+                question: "A incompatibilidade por parentesco resolve-se, depois da posse, contra o que lhe deu causa.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 40, Parágrafo único, Inciso II."
+            },
+            {
+                question: "Depois da posse, a incompatibilidade resolve-se contra o último nomeado.",
+                answer: "Errado",
+                rationale: "Errado. O critério \"contra o último nomeado\" aplica-se \"antes da posse\" (Inciso I), e não depois da posse (Inciso II)."
+            },
+            {
+                question: "Depois da posse, a incompatibilidade resolve-se contra o que tiver menos tempo de exercício no Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. O critério do \"menos tempo de exercício\" aplica-se apenas se a incompatibilidade for imputável a ambos (Inciso III), e não como regra geral \"depois da posse\" (Inciso II)."
+            },
+            {
+                question: "Se a incompatibilidade for imputável a ambos os ministros, ela resolve-se contra o que tiver menos tempo de exercício no Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 40, Parágrafo único, Inciso III."
+            },
+            {
+                question: "Se a incompatibilidade for imputável a ambos, resolve-se contra o que tiver mais tempo de exercício no Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 40, Parágrafo único, Inciso III, estabelece que a resolução é contra o que tiver \"menos tempo de exercício\"."
+            },
+            {
+                question: "Se a incompatibilidade for imputável a apenas um dos ministros, ela resolve-se contra o que tiver menos tempo de exercício no Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. O critério do \"menos tempo de exercício\" (Inciso III) aplica-se somente se a incompatibilidade for \"a ambos imputável\". Se for imputável a apenas um, aplica-se o Inciso II (\"contra o que lhe deu causa\")."
+            },
+            {
+                question: "A antiguidade do ministro será determinada, em primeiro lugar, pela nomeação.",
+                answer: "Errado",
+                rationale: "Errado. Conforme o Art. 41, a antiguidade será determinada na seguinte ordem: I - pela posse; II - pela nomeação; III - pela idade. A posse é o primeiro critério, e não a nomeação."
+            },
+            {
+                question: "O primeiro critério para determinar a antiguidade do ministro é a data da posse.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com o Art. 41, Inciso I."
+            },
+            {
+                question: "O segundo critério para determinar a antiguidade do ministro é a data da nomeação.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com o Art. 41, Inciso II."
+            },
+            {
+                question: "A idade do ministro é o terceiro critério utilizado para determinar a sua antiguidade.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com o Art. 41, Inciso III."
+            },
+            {
+                question: "A antiguidade do ministro será determinada na seguinte ordem: pela nomeação, pela posse e, por último, pela idade.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva inverte os dois primeiros critérios. O Art. 41 estabelece a ordem: I - posse; II - nomeação; III - idade."
+            },
+            {
+                question: "Os ministros, após um ano de exercício, terão direito a trinta dias de férias por ano.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 42, caput, estabelece que os ministros terão direito a \"sessenta dias de férias por ano\", e não trinta."
+            },
+            {
+                question: "Os ministros, após dois anos de exercício, terão direito a sessenta dias de férias por ano.",
+                answer: "Errado",
+                rationale: "Errado. O direito às férias, conforme o Art. 42, caput, é adquirido \"após um ano de exercício\", e não dois."
+            },
+            {
+                question: "O direito a sessenta dias de férias por ano é adquirido pelo ministro após um ano de exercício.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 42, caput."
+            },
+            {
+                question: "A escala de férias dos ministros será aprovada pelo Plenário e comunicada ao Presidente.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 42, caput, estabelece o oposto: a escala é \"aprovada pelo Presidente\" e \"comunicada ao Plenário\"."
+            },
+            {
+                question: "A escala de férias dos ministros será comunicada ao Plenário no mês de dezembro.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a parte final do Art. 42, caput."
+            },
+            {
+                question: "As férias dos ministros serão concedidas de forma que não comprometam o quórum das sessões.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 42, § 1º."
+            },
+            {
+                question: "As férias dos ministros poderão ser concedidas ainda que comprometam o quórum das sessões, desde que haja autorização do Presidente.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria o Art. 42, § 1º, que estabelece como regra que a concessão \"não\" deve comprometer o quórum."
+            },
+            {
+                question: "A qualquer tempo, por necessidade do serviço, as férias dos ministros poderão ser interrompidas.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma extração literal da primeira parte do Art. 42, § 2º."
+            },
+            {
+                question: "Uma vez iniciadas, as férias dos ministros não poderão ser interrompidas, nem mesmo por necessidade do serviço.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria frontalmente o Art. 42, § 2º, que prevê a interrupção \"a qualquer tempo, por necessidade do serviço\"."
+            },
+            {
+                question: "Em caso de interrupção das férias por necessidade do serviço, é facultado ao interessado gozar o restante do período em época oportuna.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde exatamente à parte final do Art. 42, § 2º."
+            },
+            {
+                question: "O processo de verificação de invalidez de ministro, para o fim de aposentadoria, terá início a seu requerimento.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à primeira das três hipóteses de início do processo, conforme o Art. 43, caput."
+            },
+            {
+                question: "O processo de verificação de invalidez de ministro, para o fim de aposentadoria, poderá ter início por ordem do Presidente do Tribunal, de ofício.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a segunda hipótese prevista no Art. 43, caput, para o início do processo de verificação de invalidez."
+            },
+            {
+                question: "O processo de verificação de invalidez de ministro terá início por ordem do Presidente do Tribunal, em cumprimento de deliberação do Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a terceira hipótese prevista no Art. 43, caput, para o início do processo."
+            },
+            {
+                question: "O processo de verificação de invalidez de ministro, para o fim de aposentadoria, só poderá ter início a seu requerimento.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 43, caput, prevê outras duas possibilidades: por ordem do Presidente, de ofício, ou em cumprimento de deliberação do Tribunal."
+            },
+            {
+                question: "Instaurado o processo de verificação de invalidez, o paciente será afastado, desde logo, do exercício do cargo, até decisão final.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da primeira parte do Art. 43, § 1º."
+            },
+            {
+                question: "Instaurado o processo de verificação de invalidez, o paciente será afastado do exercício do cargo somente após a decisão final.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 43, § 1º, determina que o afastamento ocorrerá \"desde logo\", e não \"até decisão final\" (que é o término do afastamento, e não o início)."
+            },
+            {
+                question: "O processo de verificação de invalidez deverá ficar concluído no prazo de sessenta dias.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde exatamente ao prazo estipulado na parte final do Art. 43, § 1º."
+            },
+            {
+                question: "O processo de verificação de invalidez deverá ficar concluído no prazo de trinta dias.",
+                answer: "Errado",
+                rationale: "Errado. O prazo estipulado no Art. 43, § 1º, é de \"sessenta dias\", e não trinta."
+            },
+            {
+                question: "Tratando-se de incapacidade mental, o Presidente nomeará curador ao paciente.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a determinação exata da primeira parte do Art. 43, § 2º."
+            },
+            {
+                question: "Tratando-se de incapacidade física, o Presidente nomeará curador ao paciente.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 43, § 2º, especifica que a nomeação de curador se aplica em caso de \"incapacidade mental\", e não física."
+            },
+            {
+                question: "A nomeação de curador ao paciente, em caso de incapacidade mental, ocorre sem prejuízo da defesa que este queira oferecer pessoalmente, ou por procurador que constituir.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da parte final do Art. 43, § 2º."
+            },
+            {
+                question: "A nomeação de curador ao paciente, em caso de incapacidade mental, impede a defesa que este queira oferecer pessoalmente.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 43, § 2º, é claro ao afirmar que a nomeação ocorre \"sem prejuízo da defesa\" pessoal."
+            },
+            {
+                question: "O ministro que, por dois anos consecutivos, afastar-se, ao todo, por seis meses ou mais, para tratamento de saúde, deverá submeter-se imediatamente a exame para verificação de invalidez.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 43, § 3º, estabelece uma condição adicional para o exame: \"ao requerer nova licença para igual fim, dentro de dois anos\". O exame não é imediato após completar os seis meses de afastamento."
+            },
+            {
+                question: "O ministro que, por dois anos consecutivos, afastar-se, ao todo, por seis meses ou mais, para tratamento de saúde, deverá submeter-se, ao requerer nova licença para igual fim, dentro de dois anos, a exame para verificação de invalidez.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 43, § 3º."
+            },
+            {
+                question: "O ministro que, por três anos consecutivos, afastar-se, ao todo, por seis meses ou mais, para tratamento de saúde, deverá submeter-se a exame para verificação de invalidez.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 43, § 3º, estabelece o período de \"dois anos consecutivos\", e não três, além de exigir a condição de requerimento de nova licença."
+            },
+            {
+                question: "O paciente, no processo de verificação de invalidez, será notificado por ofício do Presidente do Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma extração literal da primeira parte do Art. 44."
+            },
+            {
+                question: "Ao ofício de notificação do Presidente do Tribunal será anexada cópia da ordem inicial.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com o disposto na parte intermediária do Art. 44."
+            },
+            {
+                question: "O paciente terá o prazo de dez dias para alegar o que entender a bem de seus direitos, mesmo mediante a juntada de documentos.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde ao prazo e à finalidade da alegação, conforme o Art. 44."
+            },
+            {
+                question: "O prazo de dez dias para o paciente alegar seus direitos é improrrogável.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 44, em sua parte final, estabelece que o prazo é \"prorrogável por mais dez\"."
+            },
+            {
+                question: "Decorrido o prazo para alegação do paciente (Art. 44), desde que atendida a notificação, o Presidente nomeará uma junta médica.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 45, caput, estabelece que as providências serão tomadas \"atendida ou não a notificação\"."
+            },
+            {
+                question: "Decorrido o prazo do Art. 44, o Presidente nomeará uma junta de três médicos para proceder ao exame do paciente.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma extração literal da parte intermediária do Art. 45, caput."
+            },
+            {
+                question: "O Presidente nomeará uma junta de cinco médicos para proceder ao exame do paciente.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 45, caput, especifica que a junta será composta por \"três médicos\", e não cinco."
+            },
+            {
+                question: "O Presidente, além de nomear a junta médica, ordenará as demais diligências necessárias à averiguação do caso.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à parte final do Art. 45, caput."
+            },
+            {
+                question: "A recusa do paciente em submeter-se à perícia médica impedirá o julgamento do processo de invalidez.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria o Art. 45, Parágrafo único, que estabelece que a recusa \"permitirá o julgamento baseado em quaisquer outras provas\"."
+            },
+            {
+                question: "A recusa do paciente em submeter-se à perícia médica permitirá o julgamento baseado em quaisquer outras provas.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 45, Parágrafo único."
+            },
+            {
+                question: "Concluídas as diligências, poderá o paciente, ou o seu curador, apresentar alegação no prazo de dez dias.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 46."
+            },
+            {
+                question: "Concluídas as diligências, apenas o curador do paciente poderá apresentar alegação no prazo de dez dias.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 46 concede a faculdade de apresentar alegação ao \"paciente, ou o seu curador\"."
+            },
+            {
+                question: "O processo de verificação de invalidez será instruído pela unidade administrativa competente da Secretaria do Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a determinação exata da primeira parte do Art. 47."
+            },
+            {
+                question: "O processo será conduzido pelo relator desde o seu início.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 47 estabelece que o processo será \"conduzido pelo Presidente\" até que o relator seja sorteado."
+            },
+            {
+                question: "O processo de verificação de invalidez será conduzido pelo Presidente até que seja sorteado o relator.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à parte final do Art. 47."
+            },
+            {
+                question: "O julgamento [do processo de verificação de invalidez] será feito pelo Plenário.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a primeira parte do Art. 48."
+            },
+            {
+                question: "O Presidente não participa da votação no julgamento [do processo de verificação de invalidez].",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria a parte final do Art. 48, que determina \"participando o Presidente da votação\"."
+            },
+            {
+                question: "A decisão do Tribunal, pela incapacidade do ministro, será tomada pelo voto da maioria absoluta dos seus membros.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 49, caput."
+            },
+            {
+                question: "A decisão do Tribunal, pela incapacidade do ministro, será tomada pelo voto da maioria simples dos seus membros.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 49, caput, exige \"maioria absoluta\", e não maioria simples."
+            },
+            {
+                question: "A decisão que concluir pela incapacidade do ministro será imediatamente comunicada ao Poder Executivo, para os devidos fins.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a exata redação do Art. 49, Parágrafo único."
+            },
+            {
+                question: "A decisão que concluir pela incapacidade do ministro será comunicada ao Poder Legislativo, para os devidos fins.",
+                answer: "Errado",
+                rationale: "Errado. Conforme o Art. 49, Parágrafo único, a comunicação será feita \"ao Poder Executivo\", e não ao Legislativo."
+            },
+            {
+                question: "O Tribunal poderá determinar, por motivo de interesse público, a disponibilidade ou a aposentadoria de ministro da Corte.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel da primeira parte do Art. 50, caput."
+            },
+            {
+                question: "A determinação da disponibilidade ou aposentadoria de ministro da Corte independe de motivo de interesse público.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, caput, condiciona o ato a \"motivo de interesse público\"."
+            },
+            {
+                question: "Ao determinar a disponibilidade ou a aposentadoria de ministro da Corte, será assegurada a ampla defesa.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a garantia prevista na parte final do Art. 50, caput."
+            },
+            {
+                question: "Nos casos de disponibilidade ou aposentadoria, antes da instauração do procedimento, o Presidente do Tribunal remeterá ao ministro implicado cópia dos elementos contra ele coligidos.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da primeira parte do Art. 50, § 1º."
+            },
+            {
+                question: "Após a instauração do procedimento de disponibilidade ou aposentadoria, o Presidente do Tribunal remeterá ao ministro implicado cópia dos elementos contra ele coligidos.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 1º, estabelece que a remessa dos elementos ocorrerá \"antes da instauração do procedimento\"."
+            },
+            {
+                question: "Ao ministro implicado em processo de disponibilidade ou aposentadoria será franqueada oportunidade para apresentação de defesa prévia.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com a parte intermediária do Art. 50, § 1º."
+            },
+            {
+                question: "O prazo para apresentação de defesa prévia, no processo de disponibilidade ou aposentadoria, é de quinze dias.",
+                answer: "Certo",
+                rationale: "Correto. Este é o prazo estipulado no Art. 50, § 1º."
+            },
+            {
+                question: "O prazo para apresentação de defesa prévia é de dez dias, contado a partir da notificação.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 1º, define o prazo como \"quinze dias\", e não dez."
+            },
+            {
+                question: "O prazo para apresentação da defesa prévia é contado a partir da notificação.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde ao marco inicial da contagem do prazo, conforme a parte final do Art. 50, § 1º."
+            },
+            {
+                question: "Findo o prazo estabelecido para oferecimento de defesa prévia, tenha esta sido ou não apresentada, o Presidente convocará o Tribunal para deliberar a respeito da instauração do processo.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 50, § 2º, que indica a convocação independentemente da apresentação da defesa (\"tenha esta sido ou não apresentada\")."
+            },
+            {
+                question: "O Presidente só convocará o Tribunal para deliberar sobre a instauração do processo se a defesa prévia tiver sido efetivamente apresentada.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 2º, estabelece que a convocação ocorrerá \"tenha esta sido ou não apresentada\"."
+            },
+            {
+                question: "A deliberação do Tribunal a respeito da instauração do processo ocorrerá em sessão ordinária ou extraordinária, ouvido o Ministro-Corregedor.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva junta os elementos do Art. 50, § 2º, que prevê o tipo de sessão (\"ordinária ou extraordinária\") e a necessidade da oitiva (\"ouvido o Ministro-Corregedor\")."
+            },
+            {
+                question: "Determinada a instauração do procedimento, será procedida à distribuição do feito, mediante sorteio de relator.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal do Art. 50, § 3º."
+            },
+            {
+                question: "Determinada a instauração do procedimento, o Presidente do Tribunal será designado relator do feito.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 3º, estabelece que haverá \"sorteio de relator\", e não designação do Presidente."
+            },
+            {
+                question: "A partir da instauração do procedimento, o Tribunal poderá, a qualquer tempo, afastar o ministro implicado do exercício de suas funções.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma extração literal da primeira parte do Art. 50, § 4º."
+            },
+            {
+                question: "O afastamento do ministro implicado do exercício de suas funções ocorrerá sem prejuízo dos vencimentos e das vantagens do cargo.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está de acordo com o disposto na parte intermediária do Art. 50, § 4º."
+            },
+            {
+                question: "O afastamento do ministro implicado, caso ocorra, será determinado até a deliberação final.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à parte final do Art. 50, § 4º."
+            },
+            {
+                question: "O afastamento do ministro implicado do exercício de suas funções implicará o prejuízo dos vencimentos, mas manterá as vantagens do cargo.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 4º, garante que o afastamento se dará \"sem prejuízo dos vencimentos e das vantagens do cargo\"."
+            },
+            {
+                question: "Finda a fase de instrução do processo, será aberto novo prazo de quinze dias para apresentação de defesa.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a primeira determinação estabelecida no Art. 50, § 5º."
+            },
+            {
+                question: "Finda a fase de instrução do processo, será aberto igual prazo de quinze dias para manifestação do Ministério Público junto ao Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a segunda determinação estabelecida no Art. 50, § 5º."
+            },
+            {
+                question: "O julgamento do processo de disponibilidade ou aposentadoria será realizado, obrigatoriamente, em sessão extraordinária.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 6º, estabelece que o julgamento será realizado \"em sessão ordinária ou extraordinária\"."
+            },
+            {
+                question: "A disponibilidade ou a aposentadoria somente poderá ser determinada mediante o voto da maioria absoluta dos ministros efetivos do Tribunal.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à regra de quórum qualificado prevista no Art. 50, § 6º."
+            },
+            {
+                question: "A disponibilidade ou a aposentadoria poderá ser determinada mediante o voto da maioria simples dos ministros efetivos do Tribunal.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 6º, exige expressamente o voto da \"maioria absoluta\"."
+            },
+            {
+                question: "O ministro processado será excluído da votação que deliberar sobre sua disponibilidade ou aposentadoria.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva está em conformidade com a parte final do Art. 50, § 6º (\"excluído o ministro processado\")."
+            },
+            {
+                question: "O Presidente participará da votação que trata do julgamento sobre a disponibilidade ou aposentadoria do ministro processado.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 50, § 7º, que faz remissão ao § 6º (que trata do referido julgamento)."
+            },
+            {
+                question: "O Presidente do Tribunal fica excluído da votação que determinará a disponibilidade ou aposentadoria do ministro processado.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria o Art. 50, § 7º, que estabelece: \"O Presidente participará da votação de que trata o parágrafo 6º\"."
+            },
+            {
+                question: "Da decisão que julgar o processo de disponibilidade ou aposentadoria do ministro, publicar-se-á o acórdão.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase literal do Art. 50, § 8º."
+            },
+            {
+                question: "Da decisão que julgar o processo de disponibilidade ou aposentadoria do ministro, publicar-se-á uma portaria.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 8º, determina que \"publicar-se-á o acórdão\", e não uma portaria."
+            },
+            {
+                question: "Se a decisão concluir pela disponibilidade ou aposentadoria do ministro, ela será comunicada, imediatamente, ao Poder Executivo.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma cópia literal da primeira parte do Art. 50, § 9º."
+            },
+            {
+                question: "A comunicação da decisão pela disponibilidade ou aposentadoria ao Poder Executivo tem como finalidade a formalização do ato.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva corresponde à parte final do Art. 50, § 9º."
+            },
+            {
+                question: "Se a decisão concluir pela disponibilidade ou aposentadoria do ministro, será comunicada, imediatamente, ao Poder Legislativo para a formalização do ato.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 9º, determina que a comunicação será feita \"ao Poder Executivo\", e não ao Legislativo."
+            },
+            {
+                question: "Se a decisão concluir pela disponibilidade ou aposentadoria do ministro, será comunicada ao Poder Executivo após 30 dias.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 9º, estabelece que a comunicação será \"imediata\"."
+            },
+            {
+                question: "A aposentadoria voluntária do ministro implicado, publicada em data anterior ao julgamento sobre sua disponibilidade ou aposentadoria, implicará o imediato arquivamento do feito.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 50, § 10, que aplica a regra de remissão ao substituir a menção ao \"§ 6º\" pelo seu assunto (o julgamento)."
+            },
+            {
+                question: "A aposentadoria voluntária do ministro implicado, publicada em data posterior ao julgamento sobre sua disponibilidade ou aposentadoria, implicará o imediato arquivamento do feito.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 10, condiciona o arquivamento à publicação da aposentadoria \"em data anterior ao julgamento\"."
+            },
+            {
+                question: "A aposentadoria voluntária do ministro implicado, mesmo que publicada antes do julgamento, não impede a continuidade do processo, que prosseguirá até a decisão final.",
+                answer: "Errado",
+                rationale: "Errado. O Art. 50, § 10, determina o oposto: a aposentadoria voluntária anterior ao julgamento \"implicará o imediato arquivamento do feito\"."
+            },
+            {
+                question: "Aplicam-se aos Ministros-Substitutos o disposto no artigo que trata do processo de disponibilidade ou aposentadoria por interesse público.",
+                answer: "Certo",
+                rationale: "Correto. A assertiva é uma paráfrase fiel do Art. 50, § 11, aplicando a regra de remissão (o \"presente artigo\" é o Art. 50, que trata desse tema)."
+            },
+            {
+                question: "O disposto no artigo que trata do processo de disponibilidade ou aposentadoria por interesse público não se aplica aos Ministros-Substitutos.",
+                answer: "Errado",
+                rationale: "Errado. A assertiva contraria frontalmente o Art. 50, § 11, que diz: \"Aplicam-se aos Ministros-Substitutos o disposto no presente artigo.\""
+            },
+            {
+                question: "O Presidente participará da votação que delibera sobre a disponibilidade ou aposentadoria, mas o Ministro-Corregedor não.",
+                answer: "Certo",
+                rationale: "Correto. O Art. 50, § 7º, confirma a participação do Presidente na votação do § 6º. O § 6º, por sua vez, exclui apenas \"o ministro processado\", não mencionando o Corregedor (que, sendo ministro, vota). [Nota: A questão aborda o §7º e o §6º de forma combinada]."
+            },
+            {
+                question: "O arquivamento do feito, em caso de aposentadoria voluntária do ministro implicado, só ocorrerá se a publicação do ato de aposentadoria for anterior ao julgamento de que trata o § 6º.",
+                answer: "Certo",
+                rationale: "Correto. Esta é a exata condição temporal estabelecida no Art. 50, § 10."
+            }
+        ];
+
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
