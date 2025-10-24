@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Da Câmara dos Deputados</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Constituição Federal de 1988</h1>
+            <p>Da Câmara dos Deputados</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Compete privativamente à Câmara dos Deputados autorizar a instauração de processo contra o Presidente da República.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois a autorização para processar o Presidente da República é uma das competências privativas da Câmara dos Deputados, listadas no Art. 51, inciso I."
+            },
+            {
+                question: "As competências listadas no Art. 51 são exercidas pela Câmara dos Deputados em conjunto com o Senado Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O caput do Art. 51 estabelece que as competências ali listadas são \"privativamente da Câmara dos Deputados\", ou seja, exclusivas desta Casa Legislativa, não sendo exercidas em conjunto com o Senado."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados autorizar, por dois terços de seus membros, a instauração de processo contra o Presidente e o Vice-Presidente da República e os Ministros de Estado.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal do inciso I do Art. 51, indicando o quórum qualificado e as autoridades sujeitas a essa autorização."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados autorizar, por maioria absoluta de seus membros, a instauração de processo contra o Presidente da República.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta quanto ao quórum. O inciso I do Art. 51 exige a autorização por \"dois terços de seus membros\", um quórum mais rigoroso que a maioria absoluta."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados autorizar a instauração de processo contra o Presidente da República, o Vice-Presidente da República e os Ministros do Supremo Tribunal Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao incluir os Ministros do STF. O inciso I do Art. 51 abrange o Presidente, o Vice-Presidente e os \"Ministros de Estado\", não mencionando os membros do Judiciário nesse contexto."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados proceder à tomada de contas do Presidente da República, quando não apresentadas ao Congresso Nacional dentro de sessenta dias após a abertura da sessão legislativa.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois transcreve fielmente a competência da Câmara dos Deputados para a tomada de contas presidencial em caso de omissão, conforme o inciso II do Art. 51."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados proceder à tomada de contas do Presidente da República, quando não apresentadas ao Congresso Nacional dentro de trinta dias após a abertura da sessão legislativa.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta quanto ao prazo. O inciso II do Art. 51 estabelece o prazo de \"sessenta dias\", e não trinta dias."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal proceder à tomada de contas do Presidente da República, quando não apresentadas ao Congresso Nacional no prazo legal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao Senado Federal. O inciso II do Art. 51 é claro ao definir que essa competência é privativa da Câmara dos Deputados."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados elaborar seu regimento interno.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta do inciso III do Art. 51, que trata da autonomia normativa da Câmara dos Deputados."
+            },
+            {
+                question: "Compete ao Congresso Nacional elaborar o regimento interno da Câmara dos Deputados.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O inciso III do Art. 51 confere a competência para elaborar o regimento interno \"privativamente à Câmara dos Deputados\", sendo um ato de sua própria autonomia."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados dispor sobre sua organização, funcionamento e polícia.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à primeira parte das competências de auto-organização previstas no inciso IV do Art. 51."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados a iniciativa de lei para fixação da respectiva remuneração, observados os parâmetros estabelecidos na lei de diretrizes orçamentárias.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência da Câmara para iniciar o processo legislativo de fixação da remuneração de seus servidores, condicionada à LDO, conforme o inciso IV do Art. 51."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados a iniciativa de lei para fixação da respectiva remuneração, independentemente dos parâmetros estabelecidos na lei de diretrizes orçamentárias.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao ignorar a condição imposta pela norma. O inciso IV do Art. 51 estabelece que a iniciativa de lei para fixação da remuneração deve observar \"os parâmetros estabelecidos na lei de diretrizes orçamentárias\"."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados eleger membros do Conselho da República.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta do inciso V do Art. 51."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal eleger membros do Conselho da República.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao atribuir a competência ao Senado. O inciso V do Art. 51 estabelece que a eleição de membros do Conselho da República é competência privativa da Câmara dos Deputados."
+            }
+        ];
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>

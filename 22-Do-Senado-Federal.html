@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do Senado Federal</title>
+    <style>
+        :root {
+            --primary-bg: #f4f7f9;
+            --secondary-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #005a9c;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --neutral-color: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .quiz-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-header p {
+            margin: 5px 0 0;
+            color: var(--neutral-color);
+        }
+        #question-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        #question-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .answer-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--secondary-bg);
+            color: var(--primary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: var(--secondary-bg);
+            border-color: var(--primary-color);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+        .btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+        #feedback {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+        }
+        #feedback.correct-feedback {
+            background-color: #e9f6ec;
+            border-left: 5px solid var(--correct-color);
+            color: #1e4620;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #fdecea;
+            border-left: 5px solid var(--incorrect-color);
+            color: #5c1a1a;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #next-btn, #restart-btn, #prev-btn, #restart-wrong-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #prev-btn {
+            background-color: var(--neutral-color);
+        }
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        #restart-wrong-btn {
+            background-color: var(--incorrect-color);
+            margin-left: 10px;
+        }
+        #restart-wrong-btn:hover {
+            background-color: #c82333;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+        #results-container h2 {
+            color: var(--primary-color);
+        }
+        #score {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Constituição Federal de 1988</h1>
+            <p>Do Senado Federal</p>
+        </div>
+
+        <div id="quiz-body">
+            <p><span id="question-number"></span> de <span id="total-questions"></span></p>
+            <div id="question-text"></div>
+            <div class="answer-options">
+                <button class="btn" id="btn-certo" onclick="selectAnswer('Certo')">Certo</button>
+                <button class="btn" id="btn-errado" onclick="selectAnswer('Errado')">Errado</button>
+            </div>
+            <div id="feedback"></div>
+            <div class="navigation">
+                <button id="prev-btn" onclick="prevQuestion()">&larr; Anterior</button>
+                <button id="next-btn" onclick="nextQuestion()">Próxima &rarr;</button>
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>Caderno Concluído!</h2>
+            <p id="score"></p>
+            <p id="score-message"></p>
+            <button id="restart-btn" onclick="restartQuiz('all')">Refazer Todas</button>
+            <button id="restart-wrong-btn" onclick="restartQuiz('wrong')">Refazer Erradas</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            // Incisos I e II
+            {
+                question: "Compete privativamente ao Senado Federal processar e julgar o Presidente e o Vice-Presidente da República nos crimes de responsabilidade.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à primeira parte da competência estabelecida no Art. 52, inciso I, que atribui ao Senado o julgamento dos chefes do Poder Executivo por crimes de responsabilidade."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal processar e julgar o Presidente e o Vice-Presidente da República nos crimes comuns.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao indicar o tipo de crime. O Art. 52, inciso I, especifica que a competência do Senado se refere aos \"crimes de responsabilidade\". O julgamento do Presidente por crimes comuns é de competência do Supremo Tribunal Federal (Art. 102, I, 'b')."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal processar e julgar os Ministros de Estado e os Comandantes da Marinha, do Exército e da Aeronáutica nos crimes da mesma natureza conexos com os do Presidente ou Vice-Presidente da República.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a segunda parte da competência do Senado prevista no Art. 52, inciso I, que estende o julgamento a essas autoridades quando houver conexão com crimes de responsabilidade do Presidente ou Vice-Presidente."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal processar e julgar os Ministros do Supremo Tribunal Federal, os membros do Conselho Nacional de Justiça e do Conselho Nacional do Ministério Público nos crimes de responsabilidade.",
+                answer: "Certo",
+                rationale: "A questão está correta, pois é uma transcrição literal da primeira parte do Art. 52, inciso II, que define autoridades do Judiciário e dos Conselhos sujeitas ao julgamento pelo Senado por crimes de responsabilidade."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal processar e julgar o Procurador-Geral da República e o Advogado-Geral da União nos crimes de responsabilidade.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e corresponde à parte final da competência descrita no Art. 52, inciso II."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal processar e julgar o Procurador-Geral da República e o Advogado-Geral da União nos crimes comuns.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao indicar o tipo de crime. Assim como para as demais autoridades listadas no inciso II do Art. 52, a competência do Senado se restringe aos \"crimes de responsabilidade\"."
+            },
+            // Inciso III
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente, por voto secreto, após arguição pública, a escolha de determinadas autoridades.",
+                answer: "Certo",
+                rationale: "A questão está correta, pois descreve o procedimento geral (aprovação prévia, voto secreto e arguição pública) estabelecido no caput do Art. 52, inciso III, para a confirmação de certas nomeações."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente, por voto aberto, após arguição pública, a escolha de determinadas autoridades.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao indicar o tipo de votação. O caput do Art. 52, inciso III, exige expressamente que a aprovação se dê por \"voto secreto\"."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha de Magistrados, nos casos estabelecidos nesta Constituição.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois é uma transcrição literal da alínea 'a' do inciso III do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha de Ministros do Tribunal de Contas da União indicados pelo Presidente da República.",
+                answer: "Certo",
+                rationale: "A questão está correta e em conformidade com a alínea 'b' do inciso III do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha de Governador de Território.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da alínea 'c' do inciso III do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha de Presidente e diretores do banco central.",
+                answer: "Certo",
+                rationale: "A questão está correta, pois corresponde exatamente à competência prevista na alínea 'd' do inciso III do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha do Procurador-Geral da República.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da alínea 'e' do inciso III do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha de titulares de outros cargos que a lei determinar.",
+                answer: "Certo",
+                rationale: "A questão está correta e corresponde à cláusula aberta prevista na alínea 'f' do inciso III do Art. 52, que permite à lei ampliar o rol de autoridades sujeitas à sabatina do Senado."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha de titulares de outros cargos que a própria Constituição determinar.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar a fonte normativa. A alínea 'f' do inciso III do Art. 52 estabelece que a definição de outros cargos dependerá do que \"a lei determinar\", e não a Constituição."
+            },
+             // Incisos IV a VIII
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente, por voto secreto, após arguição em sessão secreta, a escolha dos chefes de missão diplomática de caráter permanente.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta do inciso IV do Art. 52, detalhando o procedimento e o objeto da competência do Senado."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente, por voto aberto, após arguição em sessão pública, a escolha dos chefes de missão diplomática de caráter permanente.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta em dois pontos do procedimento. O inciso IV do Art. 52 exige \"voto secreto\" (e não aberto) e \"arguição em sessão secreta\" (e não pública)."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar previamente a escolha dos chefes de missão diplomática de caráter temporário.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta quanto ao objeto da aprovação. O inciso IV do Art. 52 especifica que a aprovação prévia se refere aos chefes de missão diplomática de caráter \"permanente\", e não temporário."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal autorizar operações externas de natureza financeira, de interesse da União, dos Estados, do Distrito Federal, dos Territórios e dos Municípios.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da competência prevista no inciso V do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal autorizar operações internas de natureza financeira, de interesse da União e dos Estados.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta em dois pontos. O inciso V do Art. 52 refere-se a operações \"externas\" (e não internas) e abrange o interesse de todos os entes federativos (União, Estados, DF, Territórios e Municípios), não apenas da União e dos Estados."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal autorizar operações externas de natureza financeira, de interesse exclusivo da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o interesse apenas à União. O inciso V do Art. 52 estende a competência de autorização a operações de interesse também \"dos Estados, do Distrito Federal, dos Territórios e dos Municípios\"."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal fixar, por proposta do Presidente da República, limites globais para o montante da dívida consolidada da União, dos Estados, do Distrito Federal e dos Municípios.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da competência do Senado para fixar limites de endividamento dos entes federativos, conforme o inciso VI do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal fixar, por iniciativa própria, limites globais para o montante da dívida consolidada da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta em dois pontos. O inciso VI do Art. 52 exige que a fixação dos limites seja feita \"por proposta do Presidente da República\" (não por iniciativa própria do Senado) e abrange a dívida consolidada de todos os entes (União, Estados, DF e Municípios), não apenas da União."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal fixar limites globais apenas para a dívida externa consolidada da União e dos Estados.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O inciso VI do Art. 52 refere-se ao \"montante da dívida consolidada\", que engloba tanto a dívida interna quanto a externa, e abrange todos os entes federativos (União, Estados, DF e Municípios)."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre limites globais e condições para as operações de crédito externo e interno da União, dos Estados, do Distrito Federal e dos Municípios.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente parte da competência do Senado prevista no inciso VII do Art. 52, abrangendo operações de crédito de todos os entes federativos."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre limites globais e condições para as operações de crédito externo e interno apenas da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir a competência apenas à União. O inciso VII do Art. 52 estende essa competência às operações de crédito \"dos Estados, do Distrito Federal e dos Municípios\", além de suas autarquias e entidades controladas."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre limites globais e condições para as operações de crédito externo e interno das autarquias e demais entidades controladas pelo Poder Público federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à parte final do inciso VII do Art. 52, que inclui as entidades da administração indireta federal no âmbito da competência do Senado."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre limites e condições para a concessão de garantia da União em operações de crédito externo e interno.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da competência do Senado prevista no inciso VIII do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre limites e condições para a concessão de garantia dos Estados em operações de crédito externo e interno.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar o ente garantidor. O inciso VIII do Art. 52 refere-se à concessão de garantia \"da União\", e não dos Estados."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre limites e condições para a concessão de garantia da União apenas em operações de crédito externo.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir o tipo de operação. O inciso VIII do Art. 52 abrange a concessão de garantia da União em operações de crédito \"externo e interno\"."
+            },
+             // Incisos IX a XV e Parágrafo Único
+            {
+                question: "Compete privativamente ao Senado Federal estabelecer limites globais e condições para o montante da dívida mobiliária dos Estados, do Distrito Federal e dos Municípios.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da competência do Senado Federal prevista no inciso IX do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal estabelecer limites globais para o montante da dívida mobiliária apenas dos Estados e do Distrito Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por ser incompleta. O inciso IX do Art. 52 inclui também os Municípios no rol de entes cuja dívida mobiliária está sujeita aos limites fixados pelo Senado."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal estabelecer limites globais e condições para o montante da dívida consolidada dos Estados, do Distrito Federal e dos Municípios.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao trocar o tipo de dívida. O inciso IX do Art. 52 refere-se especificamente à dívida \"mobiliária\", enquanto a competência para limites da dívida consolidada está no inciso VI."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal suspender a execução, no todo ou em parte, de lei declarada inconstitucional por decisão definitiva do Supremo Tribunal Federal.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da competência do Senado Federal prevista no inciso X do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal suspender a execução, apenas no todo, de lei declarada inconstitucional por decisão definitiva do Supremo Tribunal Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta ao restringir a suspensão. O inciso X do Art. 52 permite a suspensão da execução \"no todo ou em parte\" da lei."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal suspender a execução de lei declarada inconstitucional por decisão de qualquer tribunal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A competência do Senado para suspender a execução de lei, prevista no inciso X do Art. 52, restringe-se àquela declarada inconstitucional por decisão definitiva do Supremo Tribunal Federal."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar, por maioria absoluta e por voto secreto, a exoneração, de ofício, do Procurador-Geral da República antes do término de seu mandato.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta da competência e do procedimento previstos no inciso XI do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar, por maioria simples e por voto aberto, a exoneração, de ofício, do Procurador-Geral da República antes do término de seu mandato.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta quanto ao quórum e à forma de votação. O inciso XI do Art. 52 exige \"maioria absoluta\" e \"voto secreto\"."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal aprovar a nomeação do Procurador-Geral da República.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. A aprovação da nomeação do PGR é competência do Senado prevista no inciso III, alínea 'e'. O inciso XI do Art. 52 trata da aprovação da exoneração de ofício antes do término do mandato."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal elaborar seu regimento interno.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta do inciso XII do Art. 52, que trata da autonomia normativa do Senado Federal."
+            },
+            {
+                question: "Compete ao Congresso Nacional elaborar o regimento interno do Senado Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta. O inciso XII do Art. 52 confere a competência para elaborar o regimento interno \"privativamente ao Senado Federal\", sendo um ato de sua própria autonomia."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal dispor sobre sua organização, funcionamento, polícia, criação, transformação ou extinção dos cargos, empregos e funções de seus serviços.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente as competências de auto-organização e administração do Senado Federal, conforme a primeira parte do inciso XIII do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal a iniciativa de lei para fixação da respectiva remuneração, observados os parâmetros estabelecidos na lei de diretrizes orçamentárias.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois corresponde à competência do Senado para iniciar o processo legislativo de fixação da remuneração de seus servidores, condicionada à LDO, nos termos da parte final do inciso XIII do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal eleger membros do Conselho da República.",
+                answer: "Certo",
+                rationale: "A assertiva é uma transcrição literal e correta do inciso XIV do Art. 52."
+            },
+            {
+                question: "Compete privativamente à Câmara dos Deputados eleger membros do Conselho da República.",
+                answer: "Errado",
+                rationale: "O Art. 52, XIV, estabelece que compete privativamente ao Senado Federal eleger membros do Conselho da República. A Câmara dos Deputados também possui essa competência privativa (Art. 51, V), mas a assertiva está incorreta ao atribuí-la à Câmara no contexto do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal avaliar periodicamente a funcionalidade do Sistema Tributário Nacional e o desempenho das administrações tributárias de todos os entes federativos.",
+                answer: "Certo",
+                rationale: "A assertiva está correta, pois descreve fielmente a competência avaliativa do Senado prevista no inciso XV do Art. 52."
+            },
+            {
+                question: "Compete privativamente ao Senado Federal avaliar periodicamente apenas o desempenho da administração tributária da União.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta por restringir o alcance da avaliação. O inciso XV do Art. 52 determina a avaliação do desempenho das administrações tributárias da \"União, dos Estados e do Distrito Federal e dos Municípios\"."
+            },
+            {
+                question: "Nos casos de processar e julgar o Presidente da República por crimes de responsabilidade, funcionará como Presidente o do Supremo Tribunal Federal.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e aplica a regra de remissão. O parágrafo único do Art. 52 remete ao inciso I (processar e julgar o Presidente/Vice...) e estabelece que, nesses casos, a presidência dos trabalhos será exercida pelo Presidente do STF."
+            },
+            {
+                question: "A condenação nos casos de processar e julgar Ministros do STF por crimes de responsabilidade limitar-se-á à perda do cargo, com inabilitação, por oito anos, para o exercício de função pública.",
+                answer: "Certo",
+                rationale: "A assertiva está correta e aplica a regra de remissão. O parágrafo único do Art. 52 remete aos incisos I e II (que inclui o julgamento de Ministros do STF) e define as sanções aplicáveis em caso de condenação."
+            },
+            {
+                question: "A condenação nos casos previstos nos incisos I e II será proferida por maioria absoluta dos votos do Senado Federal.",
+                answer: "Errado",
+                rationale: "A assertiva está incorreta quanto ao quórum de condenação. O parágrafo único do Art. 52 exige que a condenação seja proferida por \"dois terços dos votos do Senado Federal\"."
+            }
+        ];
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const btnCerto = document.getElementById('btn-certo');
+        const btnErrado = document.getElementById('btn-errado');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const restartWrongBtn = document.getElementById('restart-wrong-btn');
+        const quizBodyEl = document.getElementById('quiz-body');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const scoreMessageEl = document.getElementById('score-message');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongAnswersList = []; 
+        let currentQuizData = [...quizData];
+
+        function loadQuestion() {
+            resetState();
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            questionNumberEl.innerText = currentQuestionIndex + 1;
+            totalQuestionsEl.innerText = currentQuizData.length;
+            questionTextEl.innerText = currentQuestion.question;
+
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+            
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function resetState() {
+            feedbackEl.style.display = 'none';
+            feedbackEl.className = '';
+            nextBtn.style.display = 'none';
+            prevBtn.style.display = 'none';
+
+            btnCerto.disabled = false;
+            btnErrado.disabled = false;
+            btnCerto.className = 'btn';
+            btnErrado.className = 'btn';
+        }
+
+        function selectAnswer(selectedAnswer) {
+            btnCerto.disabled = true;
+            btnErrado.disabled = true;
+
+            const currentQuestion = currentQuizData[currentQuestionIndex];
+            const isCorrect = selectedAnswer === currentQuestion.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `<strong>Correto!</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'correct-feedback';
+            } else {
+                feedbackEl.innerHTML = `<strong>Incorreto.</strong> ${currentQuestion.rationale}`;
+                feedbackEl.className = 'incorrect-feedback';
+                
+                if (!wrongAnswersList.includes(currentQuestion)) {
+                     wrongAnswersList.push(currentQuestion);
+                }
+            }
+            
+            if (currentQuestion.answer === 'Certo') {
+                btnCerto.classList.add('correct');
+                if (!isCorrect) btnErrado.classList.add('incorrect');
+            } else {
+                btnErrado.classList.add('correct');
+                if (!isCorrect) btnCerto.classList.add('incorrect');
+            }
+
+            feedbackEl.style.display = 'block';
+            nextBtn.style.display = 'inline-block';
+            
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizBodyEl.style.display = 'none';
+            resultsContainerEl.style.display = 'block';
+            restartBtn.style.display = 'inline-block';
+            
+            if (wrongAnswersList.length > 0) {
+                restartWrongBtn.style.display = 'inline-block';
+            }
+            
+            const percentage = Math.round((score / currentQuizData.length) * 100);
+            scoreEl.innerText = `Você acertou ${score} de ${currentQuizData.length} questões (${percentage}%).`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = 'Excelente desempenho! Você domina o assunto.';
+            } else if (percentage >= 70) {
+                message = 'Ótimo resultado! Continue revisando os detalhes.';
+            } else if (percentage >= 50) {
+                message = 'Bom esforço. Foco nos pontos que errou para melhorar.';
+            } else {
+                message = 'Continue estudando. A repetição leva à perfeição.';
+            }
+            scoreMessageEl.innerText = message;
+        }
+
+        function restartQuiz(mode) {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            if (mode === 'wrong' && wrongAnswersList.length > 0) {
+                currentQuizData = [...wrongAnswersList];
+            } else {
+                currentQuizData = [...quizData];
+            }
+            
+            wrongAnswersList = [];
+            
+            resultsContainerEl.style.display = 'none';
+            restartWrongBtn.style.display = 'none';
+            quizBodyEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
